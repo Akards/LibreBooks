@@ -22,7 +22,7 @@ cur.execute("DELETE FROM inventory;")
 cur.execute("DELETE FROM account;")
 
 #Accountants 
-f = open("Accountants.csv", "r") 
+f = open("../db_init/Accountants.csv", "r") 
 f.readline() 
 while (True): 
     line = f.readline(); 
@@ -34,7 +34,7 @@ f.close()
 conn.commit() 
 
 #Companies 
-f = open("Companies.csv", "r") 
+f = open("../db_init/Companies.csv", "r") 
 f.readline() 
 while (True): 
     line = f.readline(); 
@@ -51,7 +51,7 @@ for x in range(50):
 conn.commit() 
 
 #Payers 
-f = open("Payer.csv", "r") 
+f = open("../db_init/Payer.csv", "r") 
 f.readline() 
 for x in range(200): 
     line = f.readline() 
@@ -63,7 +63,7 @@ f.close()
 conn.commit() 
 
 # Inventory 
-f = open("Inventory.csv", "r") 
+f = open("../db_init/Inventory.csv", "r") 
 f.readline() 
 while(True): 
     iLine = f.readline() 
@@ -77,7 +77,7 @@ while(True):
 f.close()
 
 # Accounts (non-inventory) 
-f = open("Nouns.csv", 'r') 
+f = open("../db_init/Nouns.csv", 'r') 
 f.readline() 
 i = 0 
 while(True): 
