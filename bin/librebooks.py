@@ -9,14 +9,14 @@ from flask import Flask, request, render_template, g
 IP_ADDR = "34.69.97.14"
 
 # Create the application
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 ####################################################
 # Routes
 
 @app.route("/")
 def homepage():
-    return render_template("home.html")
+    return render_template("homepage.html")
 
 #####################################################
 # Database handling 
