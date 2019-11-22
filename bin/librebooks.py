@@ -49,7 +49,7 @@ def close_db(error):
         
 def init_db():
     db = get_db()
-    with app.open_resource('schema.sql', mode='r') as f:
+    with app.open_resource('init.sql', mode='r') as f:
         db.cursor().execute(f.read())
     db.commit()
 
