@@ -18,7 +18,7 @@ app.secret_key=os.urandom(32)
 
 @app.route("/")
 def homepage():
-    return render_template("home.html")
+    return render_template("homepage.html")
 
 @app.route("/portal")
 def portal():
@@ -60,12 +60,12 @@ def payer_login():
             return render_template("login.html", step="not_password", user=user)
         else:
             debug("exists")
-	    cursor.execute("select id from payer where email=%s and pass_hash=%s",[user,password])
-	    db.commit()
-	    id = cursor.fetchone()
+            cursor.execute("select id from payer where email=%s and pass_hash=%s",[user,password])
+            db.commit()
+            id = cursor.fetchone()
             session['logged on'] = True
             session['user'] = id
-	    session['type'] = "payer"
+            session['type'] = "payer"
             return redirect(url_for("portal"))
 
 
@@ -101,11 +101,11 @@ def accountant_login():
             return render_template("login.html", step="not_password", user=user)
         else:
             cursor.execute("select id from accountant where email=%s and pass_hash=%s",[user,password])
-	    db.commit()
-	    id = cursor.fetchone()
+            db.commit()
+            id = cursor.fetchone()
             session['logged on'] = True
             session['user'] = id
-	    session['type'] = "accountant"
+            session['type'] = "accountant"
             return redirect(url_for("portal"))
 
 
