@@ -9,7 +9,7 @@ from flask import Flask, request, render_template, g, session, redirect, url_for
 IP_ADDR = "34.69.97.14"
 
 # Create the application
-app = Flask(__name__)
+app = Flask(__name__, template_folder= "../templates")
 
 
 app.secret_key=os.urandom(32)
