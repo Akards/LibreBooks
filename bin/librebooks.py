@@ -23,29 +23,41 @@ def homepage():
 def portal():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute('select full_name from %s where id=%s',[session['type'],session['user']])
+    user_type = str(session['type'])
+    user_id = str(session['user'])
+    user_id=user_id.replace("[","")
+    user_id=user_id.replace("]","")
+    if user_type == 'payer':
+        cursor.execute("select full_name from payer where id=%s",[user_id])
+    else:
+        cursor.execute("select full_name from accountant where id=%s",[user_id])
     db.commit()
     name = cursor.fetchone()
-    return render_template('portal.html', name=name)
+    return render_template('portal.html', name=name[0])
+
+@app.route("/logout")
+def logout():
+    session.pop('user',None)
+    return render_template("logout.html")
 
 @app.route("/payer_login", methods=['get', 'post'])
 def payer_login():
     if "step" not in request.form:
-        return render_template("login.html", step="attempt")
+        return render_template("payer_login.html", step="attempt")
     elif request.form["step"] == "account_lookup":
         debug("account_lookup")
         db = get_db()
         cursor = db.cursor()
         user = request.form["user"]
-        cursor.execute("select email from payer where email=%s",[user])
+        cursor.execute("select * from payer where email=%s",[user])
         db.commit()
         rowlist = cursor.fetchall()
         if len(rowlist) == 0:
             debug(rowlist)
-            return render_template("login.html", step="not_user")
+            return render_template("payer_login.html", step="not_user")
         else:
             db.commit()
-            return render_template("login.html", step="user", user=user)
+            return render_template("payer_login.html", step="user", user=user)
     elif request.form["step"] == "test_pass":
         password=request.form["password"]
         user=request.form["user"]
@@ -56,7 +68,7 @@ def payer_login():
         rowlist = cursor.fetchall()
         if len(rowlist) == 0:
             debug("does not exist")
-            return render_template("login.html", step="not_password", user=user)
+            return render_template("payer_login.html", step="not_password", user=user)
         else:
             debug("exists")
             cursor.execute("select id from payer where email=%s and pass_hash=%s",[user,password])
@@ -71,7 +83,7 @@ def payer_login():
 @app.route("/acountant_login", methods=['get', 'post'])
 def accountant_login():
     if "step" not in request.form:
-        return render_template("login.html", step="attempt")
+        return render_template("accountant_login.html", step="attempt")
     elif request.form["step"] == "account_lookup":
         debug("account_lookup")
         db = get_db()
@@ -82,10 +94,10 @@ def accountant_login():
         rowlist = cursor.fetchall()
         if len(rowlist) == 0:
             debug(rowlist)
-            return render_template("login.html", step="not_user")
+            return render_template("accountant_login.html", step="not_user")
         else:
             db.commit()
-            return render_template("login.html", step="user", user=user)
+            return render_template("accountant_login.html", step="user", user=user)
     elif request.form["step"] == "test_pass":
         password=request.form["password"]
         user=request.form["user"]
@@ -97,7 +109,7 @@ def accountant_login():
         rowlist = cursor.fetchall()
         if len(rowlist) == 0:
             debug("does not exist")
-            return render_template("login.html", step="not_password", user=user)
+            return render_template("accountant_login.html", step="not_password", user=user)
         else:
             cursor.execute("select id from accountant where email=%s and pass_hash=%s",[user,password])
             db.commit()
@@ -107,21 +119,13 @@ def accountant_login():
             session['type'] = "accountant"
             return redirect(url_for("portal"))
 
-
-@app.route("/logout")
-def logout():
-    session.pop('user',None)
-    session.pop('type',None)
-    session.pop('logged on',None)
-    return render_template("logout.html")
-
 #####################################################
 # Database handling 
   
 def connect_db():
     """Connects to the database."""
     debug("Connecting to DB.")
-    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="blogdb", 
+    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="librabooks", 
         cursor_factory=psycopg2.extras.DictCursor)
     return conn
     
