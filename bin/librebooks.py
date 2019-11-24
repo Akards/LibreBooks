@@ -17,7 +17,7 @@ app.secret_key=os.urandom(32)
 
 @app.route("/")
 def homepage():
-    return render_template("homepage.html")
+    return render_template("home.html")
 
 @app.route("/portal")
 def portal():
