@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS payer CASCADE;
 CREATE TABLE payer(
     id SERIAL,
-    pass_hash CHAR(20) NOT NULL,
+    pass_hash VARCHAR(20) NOT NULL,
     email VARCHAR(40) NOT NULL,
     full_name VARCHAR(40) NOT NULL,
     company_name VARCHAR(30),
@@ -11,7 +11,7 @@ CREATE TABLE payer(
 DROP TABLE IF EXISTS accountant CASCADE;
 CREATE TABLE accountant(
     id SERIAL,
-    pass_hash CHAR(20) NOT NULL,
+    pass_hash VARCHAR(20) NOT NULL,
     email VARCHAR(40) NOT NULL,
     full_name VARCHAR(40) NOT NULL,
     security_level INT NOT NULL,
