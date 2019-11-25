@@ -17,6 +17,14 @@ app = Flask(__name__, template_folder='../templates')
 @app.route("/")
 def homepage():
     return render_template("homepage.html")
+	
+@app.route("/create_tran_select")
+def create_tran_select():
+	return render_template("Create_Tran_Get_Type.html")
+	
+@app.route("/create_tran")
+def create_tran():
+	return render_template("Create_Tran.html", Total = "1", Rows="<td>Cash</td><td>20.00</td><td>Extra Fine Green Beans</td><td>(20.00)</td>")
 
 #####################################################
 # Database handling 
