@@ -3,7 +3,9 @@
         <title>Home</title>
     </head>
     <body>
-        <a href = "{{ url_for('payer_login') }}">Payer Login</a><br>
-        <a href = "{{ url_for('accountant_login') }}">Accountant Login</a>
+        <h1><center>LibreBooks</center></h1><br>
+        <center>Are you a payer or an accountant?</center><br>
+        <center><button onclick="window.location.href = '{{ url_for('payer_login') }}';">Payer Login</button></center><br>
+        <center><button onclick="window.location.href = '{{ url_for('accountant_login') }}';">Accountant Login</button></center>
     </body>
 </html>

@@ -1,45 +1,45 @@
 <html>
     <head>
-        <title> Login </title>
+        <title> Accountant Login </title>
     </head>
     <body>       
         {% if step=="attempt" %}
-            <h1> Librebooks Login </h1><br>
+            <center><h1> Librebooks Accountant Login </h1><br>
             <form action="{{ url_for('accountant_login') }}" method="post">
             Enter email<br>    
-            Email: <input type= "text" name = "user"><br>            
+            Email: <input type= "text" name = "user">
             <input type="hidden" name="step" value="account_lookup">
-            <input type="submit">
+            <input type="submit"></center>
             </form>
         {% elif step == "not_user" %}
-            <h1> Librebooks Login </h1><br>
-            <font color="red">Invalid username</font>
+            <center><h1> Librebooks Accountant Login </h1><br>
+            <h3><font color="red">Invalid email</font></h3>
             <form action="{{ url_for('accountant_login') }}" method="post">
             Enter email<br>    
-            Email: <input type= "text" name = "user"><br>            
+            Email: <input type= "text" name = "user">          
             <input type="hidden" name="step" value="account_lookup">
-            <input type="submit">
+            <input type="submit"></center>
             </form>
         {% elif step == "user"%}
-            <h1> Librebooks Login </h1><br>
+            <center><h1> Librebooks Accountant Login </h1><br>
             <font color="green">Account: {{user}}</font>
             <form action="{{ url_for('accountant_login') }}" method="post">
-            Enter password<br>            
-            Password: <input type= "text" name = "password"><br>
+            Enter password<br>
+            Password: <input type= "text" name = "password">
             <input type="hidden" name="step" value="test_pass">
             <input type="hidden" name="user" value={{user}}>
-            <input type="submit">
+            <input type="submit"></center>
             </form>
         {% elif step == "not_password"%}
-            <h1> Librebooks Login </h1><br>
-            <font color="red">Incorrect password</font><br>
+            <center><h1> Librebooks Accountant Login </h1><br>
+            <h3><font color="red">Incorrect password</font></h3><br>
             <font color="green">Account: {{user}}</font>
             <form action="{{ url_for('accountant_login') }}" method="post">
             Enter password<br>            
-            Password: <input type= "text" name = "password"><br>
+            Password: <input type= "text" name = "password">
             <input type="hidden" name="step" value="test_pass">
             <input type="hidden" name="user" value={{user}}>
-            <input type="submit">
+            <input type="submit"></center>
             </form>
         {% elif step == "password" %}
             <h1>Welcome {{user}} </h1><br>
