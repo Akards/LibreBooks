@@ -24,7 +24,7 @@ def create_tran_select():
 	
 @app.route("/create_tran")
 def create_tran():
-	return render_template("Create_Tran.html", Total = "1", Rows="<tr><td>Cash</td><td>20.00</td><td>Extra Fine Green Beans</td><td>(20.00)</td></tr>")
+	return render_template("Create_Tran.html", Total = "0")
 
 #####################################################
 # Database handling 
