@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # Blog Flask application
 
 import os
@@ -182,4 +180,3 @@ def debug(s):
     if FLASK_DEBUG is set."""
     if app.config['DEBUG']:
         print(s)
->>>>>>> 35d60e932821a408c244ac983ef9499fab222deb
