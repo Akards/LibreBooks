@@ -21,23 +21,28 @@ def homepage():
 
 @app.route("/portal")
 def portal():
-    db = get_db()
-    cursor = db.cursor()
-    user_type = str(session['type'])
-    user_id = str(session['user'])
-    user_id=user_id.replace("[","")
-    user_id=user_id.replace("]","")
-    if user_type == 'payer':
-        cursor.execute("select full_name from payer where id=%s",[user_id])
+    if session['login'] == True:
+        db = get_db()
+        cursor = db.cursor()
+        user_type = str(session['type'])
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+        if user_type == 'payer':
+            cursor.execute("select full_name from payer where id=%s",[user_id])
+        else:
+            cursor.execute("select full_name from accountant where id=%s",[user_id])
+        db.commit()
+        name = cursor.fetchone()
+        return render_template('portal.html', name=name[0])
     else:
-        cursor.execute("select full_name from accountant where id=%s",[user_id])
-    db.commit()
-    name = cursor.fetchone()
-    return render_template('portal.html', name=name[0])
+        return render_template("home.html")
 
 @app.route("/logout")
 def logout():
     session.pop('user',None)
+    session.pop('type',None)
+    session['logged on'] = False
     return render_template("logout.html")
 
 @app.route("/payer_login", methods=['get', 'post'])
