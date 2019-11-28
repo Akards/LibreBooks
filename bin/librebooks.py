@@ -139,7 +139,7 @@ def create_account():
         #TODO- Check if an accountant has access to a company before submitting.
         #      Maybe even just have them select from a list of companies they have access to
         db.commit()
-        acc_id = cursor.fetchone()
+        acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
         db.commit()
         return redirect(url_for("portal"))
