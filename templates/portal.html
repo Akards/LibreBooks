@@ -1,6 +1,8 @@
 <html>
 <body>
-    <center><h2>Welcome {{name}}</h2><br>
-    <button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
+    <center><h2>Welcome {{name}}</h2><br><br>
+    <left>
+    <a href= '{{url_for('create_account')}}'>Create Account (Non-Inventory)</a><br>
+    <center><button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
 </body>
 </html>
