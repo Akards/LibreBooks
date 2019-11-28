@@ -143,7 +143,18 @@ def create_account():
         db.commit()
         return redirect(url_for("portal"))
     else:
-        return render_template("create_account.html", step = "entry");
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT id FROM can_access where user_id=%s", [session['user']])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT name from company where id=%s", [id])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies["id"] = name;
+        return render_template("create_account.html", companies = companies);
 #####################################################
 # Database handling 
   

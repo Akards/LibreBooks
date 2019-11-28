@@ -13,6 +13,11 @@
 	</select><br><br>
 	Balance: &nbsp <input type= "number" name="balance"><br><br>
 	Sec Level: <input type="number" name="sec"><br><br>
+	Company: <select name="company">
+		{% for id, name in companies.items() %}
+		<option value={{id}}>name</option>
+		{% endfor %}
+	</select><br><br>
 	Company ID: <input type = "number" name="company"><br><br>
 	<input type="hidden" name="step" value="account_lookup">
 	<input type="submit"></center>
