@@ -127,6 +127,7 @@ def accountant_login():
 @app.route("/create_account", methods=['get', 'post'])
 def create_account():
     if "accname" in request.form:
+        debug("made it to the form")
         db = get_db()
         cursor = db.cursor()
         name = request.form["accname"]
