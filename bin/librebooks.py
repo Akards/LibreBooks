@@ -21,7 +21,7 @@ def homepage():
 
 @app.route("/portal")
 def portal():
-    if session['login'] == True:
+    if session['logged on'] == True:
         db = get_db()
         cursor = db.cursor()
         user_type = str(session['type'])
