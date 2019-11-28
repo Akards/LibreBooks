@@ -146,7 +146,7 @@ def create_account():
         db = get_db()
         cursor = db.cursor()
         companies = {}
-        cursor.execute("SELECT id FROM can_access where user_id=%s", [session['user']])
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user']])
         db.commit()
         comp_ids = cursor.fetchall()
         for id in comp_ids:
