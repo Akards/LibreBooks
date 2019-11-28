@@ -134,13 +134,13 @@ def create_account():
         balance = request.form["balance"]
         sec = request.form["sec"]
         company = request.form["company"]
-        cursor.execute("INSERT INTO account(name, type, balance, sec_int) VALUES (%s, %s, %d, %i);", [name, type, balance, sec])
-        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %d AND sec_int = %i;", [name, type, balance, sec])
+        cursor.execute("INSERT INTO account(name, type, balance, sec_int) VALUES (%s, %s, %s, %s);", [name, type, balance, sec])
+        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %s AND sec_int = %s;", [name, type, balance, sec])
         #TODO- Check if an accountant has access to a company before submitting.
         #      Maybe even just have them select from a list of companies they have access to
         db.commit()
         acc_id = cursor.fetchone()
-        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%i, %i);", [company, acc_id])
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
         db.commit()
         return redirect(url_for("portal"))
     else:
