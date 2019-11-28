@@ -150,7 +150,7 @@ def create_account():
         db.commit()
         comp_ids = cursor.fetchall()
         for id in comp_ids:
-            cursor.execute("SELECT comp_name from company where id=%s", [id])
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
             db.commit()
             name = cursor.fetchone()[0]
             companies["id"] = name;
