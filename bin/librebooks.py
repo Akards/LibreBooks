@@ -129,7 +129,7 @@ def create_account():
     if "name" in request.form:
         db = get_db()
         cursor = db.cursor()
-        name = request.form["name"]
+        name = request.form["accname"]
         type = request.form["type"]
         balance = request.form["balance"]
         sec = request.form["sec"]
