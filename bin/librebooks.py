@@ -153,7 +153,7 @@ def create_account():
             cursor.execute("SELECT comp_name from company where id=%s", [id][0])
             db.commit()
             name = cursor.fetchone()[0]
-            companies["id"] = name;
+            companies[str(id)] = name;
         return render_template("create_account.html", companies = companies);
 #####################################################
 # Database handling 
