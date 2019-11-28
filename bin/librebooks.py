@@ -85,7 +85,7 @@ def payer_login():
             return redirect(url_for("portal"))
 
 
-@app.route("/acountant_login", methods=['get', 'post'])
+@app.route("/accountant_login", methods=['get', 'post'])
 def accountant_login():
     if "step" not in request.form:
         return render_template("accountant_login.html", step="attempt")
@@ -124,6 +124,27 @@ def accountant_login():
             session['type'] = "accountant"
             return redirect(url_for("portal"))
 
+@app.route("/create_account", methods=['get', 'post'])
+def create_account():
+    if "name" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        name = request.form["name"]
+        type = request.form["type"]
+        balance = request.form["balance"]
+        sec = request.form["sec"]
+        company = request.form["company"]
+        cursor.execute("INSERT INTO account(name, type, balance, sec_int) VALUES (%s, %s, %f, %i);", [name, type, balance, sec])
+        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %f AND sec_int = %i;")
+        #TODO- Check if an accountant has access to a company before submitting.
+        #      Maybe even just have them select from a list of companies they have access to
+        db.commit()
+        acc_id = cursor.fetchone()
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%i, %i);")
+        db.commit()
+        return redirect(url_for("portal"))
+    else:
+        return render_template("create_account.html", step = "entry");
 #####################################################
 # Database handling 
   
