@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title> New Account </title>
+    </head>
+    <body>       
+        {% if step == "entry"}
+            <h1> Create Account </h1><br>
+            <form action="{{ url_for('payer_login') }}" method="post"> 
+            Name: <input type= "text" name = "accname"><br><br>
+	    Type: <select name= "type">
+		<option value="ASSET">ASSET</option>
+		<option value="LIABILITY">LIABILITY</option>
+		<option value="EQUITY">EQUITY</option>
+	    </select><br><br>
+	    Balance: &nbsp <input type= "number" name="balance"><br><br>
+	    Sec Level: <input type="number" name="sec"><br><br>
+            <input type="hidden" name="step" value="account_lookup">
+            <input type="submit"></center>
+            </form>
+    </body>
+</html>
