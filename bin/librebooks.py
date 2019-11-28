@@ -90,7 +90,6 @@ def accountant_login():
     if "step" not in request.form:
         return render_template("accountant_login.html", step="attempt")
     elif request.form["step"] == "account_lookup":
-        debug("account_lookup")
         db = get_db()
         cursor = db.cursor()
         user = request.form["user"]
@@ -135,8 +134,8 @@ def create_account():
         balance = request.form["balance"]
         sec = request.form["sec"]
         company = request.form["company"]
-        cursor.execute("INSERT INTO account(name, type, balance, sec_int) VALUES (%s, %s, %f, %i);", [name, type, balance, sec])
-        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %f AND sec_int = %i;")
+        cursor.execute("INSERT INTO account(name, type, balance, sec_int) VALUES (%s, %s, %d, %i);", [name, type, balance, sec])
+        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %d AND sec_int = %i;", [name, type, balance, sec])
         #TODO- Check if an accountant has access to a company before submitting.
         #      Maybe even just have them select from a list of companies they have access to
         db.commit()
