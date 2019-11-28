@@ -140,7 +140,7 @@ def create_account():
         #      Maybe even just have them select from a list of companies they have access to
         db.commit()
         acc_id = cursor.fetchone()
-        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%i, %i);")
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%i, %i);", [company, acc_id])
         db.commit()
         return redirect(url_for("portal"))
     else:
