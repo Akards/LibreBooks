@@ -135,7 +135,7 @@ def create_account():
         sec = request.form["sec"]
         company = request.form["company"]
         cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s);", [name, type, balance, sec])
-        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %s AND sec_int = %s;", [name, type, balance, sec])
+        cursor.execute("SELECT id FROM account WHERE name=%s AND type = %s AND balance = %s AND security_level = %s;", [name, type, balance, sec])
         #TODO- Check if an accountant has access to a company before submitting.
         #      Maybe even just have them select from a list of companies they have access to
         db.commit()
