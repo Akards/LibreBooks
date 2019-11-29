@@ -122,6 +122,7 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+
 @app.route("/view_accounts", methods=['get', 'post'])
 def view_accounts():
     if "step" not in request.form:
@@ -162,6 +163,40 @@ def create_account():
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        db.commit()
+        return redirect(url_for("portal"))
+    else:
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies[str(id[0])] = name;
+        return render_template("create_account.html", companies = companies);
+@app.route("/create_account", methods=['get', 'post'])
+def create_account():
+    if "accname" in request.form:
+        debug("made it to the form")
+        db = get_db()
+        cursor = db.cursor()
+        name = request.form["accname"]
+        type = request.form["type"]
+        balance = request.form["balance"]
+        sec = request.form["sec"]
+        company = request.form["company"]
+        price = request.form["price"]
+        quantity = request.form["quantity"]
+
+        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
+        db.commit()
+        acc_id = cursor.fetchone()[0]
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        cursor.execute("INSERT INTO inventory(id, price, quantity) VALUES (%s, %s, %s);", [acc_id, price, quantity])
         db.commit()
         return redirect(url_for("portal"))
     else:
