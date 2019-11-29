@@ -11,10 +11,10 @@
 		{% endfor %}
 		</select><br><br>
 	
-		<input type="hidden" name="step" value="show">
+		<input type="hidden" name="step" value="view">
 		<input type="submit">
 
-	{% elif step=="show"%}
+	{% elif step=="view"%}
 		<table>
 			<tr>
 				<th> ID </th>
@@ -23,7 +23,7 @@
 				<th> BALANCE </th>
 				<th> SECURITY LEVEL </th>
 			</tr>
-			{% for i in range(0, len)}
+			{% for i in range(0, len) %}
 				<tr>
 					<td> {{accounts[i][0]}} </td>
 					<td> {{accounts[i][1]}} </td>
