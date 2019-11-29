@@ -184,16 +184,30 @@ def delete_account():
         db = get_db()
         cursor = db.cursor()
         id = request.form["id"]
-        cursor.execute("DELETE FROM account WHERE id=%s;", [id])
-        cursor.execute("SELECT FROM INVENTORY WHERE id=%s", [id])
+        cursor.execute("SELECT * FROM INVENTORY WHERE id=%s", [id])
         db.commit()
         name = cursor.fetchone()
         if len(name) != 0:
             cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
         db.commit()
-        return redirect(url_for("portal"))
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        got_it = False
+        for comp_id in comp_ids:
+            cursor.execute("SELECT * FROM owns where acc_id=%s && comp_id=%s", [id, comp_id])
+            db.commit()
+            accounts = cursor.fetchall
+            if len(accounts) == 1:
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
+                got_it = True
+        if got_it:
+            return redirect(url_for("portal"))
+        else:
+            return render_template("delete_account.html", error=1)
     else:
-        return render_template("delete_account.html");
+        return render_template("delete_account.html")
 #####################################################
 # Database handling 
   

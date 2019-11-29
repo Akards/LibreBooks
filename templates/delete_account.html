@@ -8,5 +8,8 @@
 	ID: <input type="number" name="id"><br><br>
 	<input type="submit"></center>
 	</form>
+	{% if error==1 %}
+		<font color="red">Invalid ID</font>
+	{%endif%}
     </body>
 </html>
