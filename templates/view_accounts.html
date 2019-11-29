@@ -5,6 +5,7 @@
     <body>       
 	<h1> View Accounts </h1><br>
 	{% if step=="getcomp" %}
+		<form action="{{ url_for('login') }}" method="post">
 		View accouts for: <select name="company">
 		{% for id, name in companies.items() %}
 		<option value="{{id}}">{{name}}</option>
@@ -13,8 +14,10 @@
 	
 		<input type="hidden" name="step" value="view">
 		<input type="submit">
+		</form>
 
 	{% elif step=="view"%}
+		<a href= '{{url_for('portal')}}'>Return to Portal</a><br><br>
 		<table>
 			<tr>
 				<th> ID </th>
