@@ -1,7 +1,7 @@
 <html>
 <body>
     <center><h2>Welcome {{name}}</h2><br></center>
-	{% if '{{session['type']}}' == 'accountant' %}
+	{% if session['type'] == 'accountant' %}
 		<left>
 		<a href= '{{url_for('view_accounts')}}'>View Accounts</a><br>
 		<a href= '{{url_for('create_account')}}'>Create Account (Non-Inventory)</a><br>
