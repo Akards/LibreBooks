@@ -177,6 +177,23 @@ def create_account():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_account.html", companies = companies);
+
+@app.route("/delete_account", methods=['get', 'post'])
+def delete_account():
+    if "id" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        id = request.form["id"]
+        cursor.execute("DELETE FROM account WHERE id=%s;", [id])
+        cursor.execute("SELECT FROM INVENTORY WHERE id=%s", [id])
+        db.commit()
+        name = cursor.fetchone()
+        if len(name) != 0:
+            cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
+        db.commit()
+        return redirect(url_for("portal"))
+    else:
+        return render_template("delete_account.html");
 #####################################################
 # Database handling 
   

@@ -11,7 +11,7 @@
 	<h1> View Accounts </h1><br>
 	{% if step=="getcomp" %}
 		<form action="{{ url_for('view_accounts') }}" method="post">
-		View accouts for: <select name="company">
+		View accounts for: <select name="company">
 		{% for id, name in companies.items() %}
 		<option value="{{id}}">{{name}}</option>
 		{% endfor %}
