@@ -142,7 +142,7 @@ def view_accounts():
         db = get_db()
         cursor = db.cursor()
         company = request.form["company"]
-        cursor.execute("SELECT id, name, type, balance security_level FROM accounts join owns on id=acc_id WHERE comp_id = %s", [company])
+        cursor.execute("SELECT id, name, type, balance security_level FROM account join owns on id=acc_id WHERE comp_id = %s", [company])
         db.commit();
         accounts = cursor.fetchall()
         return render_template("view_accounts.html", step="view", accounts=accounts, len=len(accounts));
