@@ -23,7 +23,7 @@
 
 	{% elif step=="view"%}
 		<a href= '{{url_for('portal')}}'>Return to Portal</a><br><br>
-		<table style = "padding:15px; border: 1px solid black; border-spacing: 5px;">
+		<table style = "border: 1px solid black;">
 			<tr>
 				<th> ID </th>
 				<th> NAME </th>
@@ -38,6 +38,8 @@
 					<td> {{accounts[i][2]}} </td>
 					<td> {{accounts[i][3]}} </td>
 					<td> {{accounts[i][4]}} </td>
+					<td> {{accounts[i][5]}} </td>
+
 				</tr>
 			{% endfor %}
 		</table>
