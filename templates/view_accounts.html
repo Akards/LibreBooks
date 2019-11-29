@@ -17,8 +17,11 @@
 		</form>
 
 	{% elif step=="view"%}
+		table, th, td {
+			border: 1px solid black
+		}
 		<a href= '{{url_for('portal')}}'>Return to Portal</a><br><br>
-		<table style = "padding:15px; border: 1px solid black;">
+		<table style = "padding:15px; border: 1px solid black; border-spacing: 5px;">
 			<tr>
 				<th> ID </th>
 				<th> NAME </th>
