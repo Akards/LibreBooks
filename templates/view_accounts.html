@@ -1,0 +1,38 @@
+<html>
+    <head>
+	<title> View Accounts </title>
+    </head>
+    <body>       
+	<h1> View Accounts </h1><br>
+	{% if step=="getcomp" %}
+		View accouts for: <select name="company">
+		{% for id, name in companies.items() %}
+		<option value="{{id}}">{{name}}</option>
+		{% endfor %}
+		</select><br><br>
+	
+		<input type="hidden" name="step" value="show">
+		<input type="submit">
+
+	{% elif step=="show"%}
+		<table>
+			<tr>
+				<th> ID </th>
+				<th> NAME </th>
+				<th> TYPE </th>
+				<th> BALANCE </th>
+				<th> SECURITY LEVEL </th>
+			</tr>
+			{% for i in range(0, len)}
+				<tr>
+					<td> {{accounts[i][0]}} </td>
+					<td> {{accounts[i][1]}} </td>
+					<td> {{accounts[i][2]}} </td>
+					<td> {{accounts[i][3]}} </td>
+					<td> {{accounts[i][4]}} </td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% endif %}
+    </body>
+</html>

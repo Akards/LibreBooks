@@ -122,6 +122,30 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+@app.route("/view_accounts", methods=['get', 'post'])
+def view_accounts():
+    if "step" not in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies[str(id[0])] = name;
+        return render_template("view_accounts.html", step="getcomp")
+
+    elif request.form["step"] == "view":
+        db = get_db()
+        cursor = db.cursor()
+        company = request.form["company"]
+        cursor.execute("SELECT id, name, type, balance security_level FROM accounts join owns on id=acc_id WHERE comp_id = %s", [company])
+        db.commit();
+        accounts = cursor.fetchall()
+        return render_template("view_accounts.html", step="view", accounts=accounts, len=len(accounts));
 
 @app.route("/create_account", methods=['get', 'post'])
 def create_account():
@@ -135,8 +159,6 @@ def create_account():
         sec = request.form["sec"]
         company = request.form["company"]
         cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
-        #TODO- Check if an accountant has access to a company before submitting.
-        #      Maybe even just have them select from a list of companies they have access to
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
