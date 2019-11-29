@@ -178,8 +178,9 @@ def create_account():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_account.html", companies = companies);
-@app.route("/create_account", methods=['get', 'post'])
-def create_account():
+
+@app.route("/create_inventory", methods=['get', 'post'])
+def create_inventory():
     if "accname" in request.form:
         debug("made it to the form")
         db = get_db()
@@ -211,7 +212,7 @@ def create_account():
             db.commit()
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
-        return render_template("create_account.html", companies = companies);
+        return render_template("create_inventory.html", companies = companies);
 
 @app.route("/delete_account", methods=['get', 'post'])
 def delete_account():
