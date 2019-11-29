@@ -11,8 +11,8 @@
 		<option value="LIABILITY">LIABILITY</option>
 		<option value="EQUITY">EQUITY</option>
 	</select><br><br>
-	Balance: &nbsp <input type= "number" name="balance"><br><br>
-	Sec Level: <input type="number" step = "any" name="sec"><br><br>
+	Balance: &nbsp <input type= "number" step = ".01" name="balance"><br><br>
+	Sec Level: <input type="number" name="sec"><br><br>
 	Company: <select name="company">
 		{% for id, name in companies.items() %}
 		<option value="{{id}}">{{name}}</option>
