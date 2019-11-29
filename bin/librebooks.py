@@ -195,12 +195,12 @@ def delete_account():
         comp_ids = cursor.fetchall()
         got_it = False
         for comp_id in comp_ids:
-            cursor.execute("SELECT * FROM owns where acc_id=%s && comp_id=%s", [id, comp_id])
+            cursor.execute("SELECT * FROM owns where acc_id=%s && comp_id=%s", [id, comp_id[0]])
             db.commit()
             accounts = cursor.fetchall
             if accounts is not None:
-                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
-                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id[0]])
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id0[0]])
                 got_it = True
         if got_it:
             return redirect(url_for("portal"))
