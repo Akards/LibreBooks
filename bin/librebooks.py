@@ -187,7 +187,7 @@ def delete_account():
         cursor.execute("SELECT * FROM INVENTORY WHERE id=%s", [id])
         db.commit()
         name = cursor.fetchone()
-        if len(name) != 0:
+        if name is not None:
             cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
         db.commit()
         cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
@@ -198,7 +198,7 @@ def delete_account():
             cursor.execute("SELECT * FROM owns where acc_id=%s && comp_id=%s", [id, comp_id])
             db.commit()
             accounts = cursor.fetchall
-            if len(accounts) == 1:
+            if accounts is not None:
                 cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
                 cursor.execute("DELETE FROM owns WHERE acc_id=%s && comp_id=%s;", [id, comp_id])
                 got_it = True
