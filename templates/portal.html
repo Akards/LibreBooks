@@ -1,12 +1,14 @@
 <html>
 <body>
     <center><h2>Welcome {{name}}</h2><br></center>
-    <left>
-    <a href= '{{url_for('view_accounts')}}'>View Accounts</a><br>
-	<a href= '{{url_for('create_account')}}'>Create Account (Non-Inventory)</a><br>
-	<a href= '{{url_for('create_inventory')}}'>Create Account (Inventory)</a><br>
-	<a href= '{{url_for('delete_account')}}'>Delete Account</a><br><br>
-    </left>
+	{% if '{{session['type']}}' == 'accountant' %}
+		<left>
+		<a href= '{{url_for('view_accounts')}}'>View Accounts</a><br>
+		<a href= '{{url_for('create_account')}}'>Create Account (Non-Inventory)</a><br>
+		<a href= '{{url_for('create_inventory')}}'>Create Account (Inventory)</a><br>
+		<a href= '{{url_for('delete_account')}}'>Delete Account</a><br><br>
+		</left>
+	{% endif %}
     <center><button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
 </body>
 </html>
