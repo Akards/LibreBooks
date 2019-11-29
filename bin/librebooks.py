@@ -136,7 +136,7 @@ def view_accounts():
             db.commit()
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
-        return render_template("view_accounts.html", step="getcomp")
+        return render_template("view_accounts.html", step="getcomp", companies=companies)
 
     elif request.form["step"] == "view":
         db = get_db()
