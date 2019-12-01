@@ -11,13 +11,102 @@ IP_ADDR = "34.69.97.14"
 # Create the application
 app = Flask(__name__, template_folder='../templates')
 app.secret_key=os.urandom(32)
+#####################################################
+# Database handling 
+  
+def connect_db():
+    """Connects to the database."""
+    debug("Connecting to DB.")
+    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="accountingdb", 
+        cursor_factory=psycopg2.extras.DictCursor)
+    return conn
+    
+def get_db():
+    """Opens a new database connection if there is none yet for the
+    current application context.
+    """
+    if not hasattr(g, 'pg_db'):
+        g.pg_db = connect_db()
+    return g.pg_db
+    
+@app.teardown_appcontext
+def close_db(error):
+    """Closes the database automatically when the application
+    context ends."""
+    debug("Disconnecting from DB.")
+    if hasattr(g, 'pg_db'):
+        g.pg_db.close()
 
 ####################################################
 # Routes
-
 @app.route("/")
 def homepage():
     return render_template("home.html")
+
+@app.route("/create_tran")
+def create_tran():
+	return render_template("Create_Tran.html", Total = "0")
+
+@app.route("/manage_payers", methods=['get', 'post'])
+def manage_payers():
+    if session['logged on'] == True and session['type'] == "accountant":
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+        #user_id='88'
+        #cursor.execute('select full_name, email, company_name from payer order by full_name')
+        q0 = 'select payer.full_name, payer.email, payer.company_name, account.name from ('
+        q1 = 'select accountant_account.acc_id, invoice.payer, accountant_account.name from (select * from (select * from (select accountant.id,'
+        q2 = 'accountant.security_level, can_access.comp_id from accountant join can_access on accountant.id=can_access.user_id where id= '
+        q3 = user_id + ') as comp_access join owns on comp_access.comp_id = owns.comp_id)' 
+        q4 = 'as comp_owns join (select account.id, account.name, account.security_level from account)'
+        q5 = ' as account on comp_owns.acc_id = account.id and comp_owns.security_level >= account.security_level)'
+        q6 = ' as accountant_account join invoice on accountant_account.acc_id = invoice.account'
+        q7 = ') as account join payer on payer.id = account.payer'
+        if "step" not in request.form:
+            return render_template("manage_payers.html", step="add_or_drop")
+        elif request.form["step"] == "add":
+            print("added")
+            return render_template('manage_payers.html', step='add')
+        elif request.form["step"] == "added":
+            db = get_db()
+            cursor = db.cursor()
+            p= request.form['password']
+            e =request.form['email']
+            n=request.form['name']
+            c=request.form['company']
+            query='insert into payer(pass_hash, email, full_name, company_name) values'
+            cursor.execute(query + '(%s, %s, %s, %s)',(p,e,n,c))
+            db.commit()
+            print("committed")
+            return render_template('manage_payers.html', step="done_adding")
+        elif request.form["step"] == "drop":
+            print("drop")
+            db = get_db()
+            cursor = db.cursor()
+            query = q0 + q1 + q2 + q3 + q4 + q5 + q6 + q7
+            cursor.execute(query)
+            #cursor.execute('select accountant_account.acc_id, invoice.payer from (select * from (select * from (select accountant.id, accountant.security_level, can_access.comp_id from accountant join can_access on accountant.id=can_access.user_id where id= %s) as comp_access join owns on comp_access.comp_id = owns.comp_id)as comp_owns join (select account.id, account.security_level from account) as account on comp_owns.acc_id = account.id and comp_owns.security_level >= account.security_level) as accountant_account join invoice on accountant_account.acc_id = invoice.account', [session['user']])
+            rowlist = cursor.fetchall()
+            print(rowlist)
+            return render_template('manage_payers.html', step="drop", payers=rowlist)
+        elif request.form["step"] == 'deleted':
+            db = get_db()
+            cursor = db.cursor()
+            payer_id = 'select invoice.payer from ' + q1 + q2 + q3 + q4 + q5 + q6
+            cursor.execute(payer_id)
+            payers = cursor.fetchall()
+            for payer in payers:
+                cursor.execute('delete from payer where id=%s',[payer])
+                cursor.execute('delete from invoice where payer=%s',[payer])
+                db.commit()
+            return render_template('manage_payers.html', step="delete_done"),
+        elif request.form["step"] == 'portal':
+            return redirect(url_for("portal"))
+        elif request.form["step"] == 'back':
+            return redirect(url_for("manage_payers"))
+    else:
+        return redirect(url_for("home"))
 
 @app.route("/portal")
 def portal():
@@ -34,9 +123,9 @@ def portal():
             cursor.execute("select full_name from accountant where id=%s",[user_id])
         db.commit()
         name = cursor.fetchone()
-        return render_template('portal.html', name=name[0])
+        return render_template('portal.html', name=name[0], type=user_type)
     else:
-        return render_template("home.html")
+        return redirect(url_for("home")) ####from render_template("home.html")
 
 @app.route("/logout")
 def logout():
@@ -54,7 +143,7 @@ def payer_login():
         db = get_db()
         cursor = db.cursor()
         user = request.form["user"]
-        cursor.execute("select * from payer where email=%s",[user])
+        cursor.execute("select email from payer where email=%s",[user])
         db.commit()
         rowlist = cursor.fetchall()
         if len(rowlist) == 0:
@@ -123,36 +212,129 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+@app.route("/view_accounts", methods=['get', 'post'])
+def view_accounts():
+    if "step" not in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies[str(id[0])] = name;
+        return render_template("view_accounts.html", step="getcomp", companies=companies)
 
-#####################################################
-# Database handling 
-  
-def connect_db():
-    """Connects to the database."""
-    debug("Connecting to DB.")
-    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="librabooks", 
-        cursor_factory=psycopg2.extras.DictCursor)
-    return conn
-    
-def get_db():
-    """Opens a new database connection if there is none yet for the
-    current application context.
-    """
-    if not hasattr(g, 'pg_db'):
-        g.pg_db = connect_db()
-    return g.pg_db
-    
-@app.teardown_appcontext
-def close_db(error):
-    """Closes the database automatically when the application
-    context ends."""
-    debug("Disconnecting from DB.")
-    if hasattr(g, 'pg_db'):
-        g.pg_db.close()
+    elif request.form["step"] == "view":
+        db = get_db()
+        cursor = db.cursor()
+        company = request.form["company"]
+        cursor.execute("SELECT id, name, type, balance security_level FROM account join owns on id=acc_id WHERE comp_id = %s", [company])
+        db.commit();
+        accounts = cursor.fetchall()
+        return render_template("view_accounts.html", step="view", accounts=accounts, len=len(accounts));
+@app.route("/create_account", methods=['get', 'post'])
+def create_account():
+    if "accname" in request.form:
+        debug("made it to the form")
+        db = get_db()
+        cursor = db.cursor()
+        name = request.form["accname"]
+        type = request.form["type"]
+        balance = request.form["balance"]
+        sec = request.form["sec"]
+        company = request.form["company"]
+        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
+        db.commit()
+        acc_id = cursor.fetchone()[0]
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        db.commit()
+        return redirect(url_for("portal"))
+    else:
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies[str(id[0])] = name;
+        return render_template("create_account.html", companies = companies);
+@app.route("/create_inventory", methods=['get', 'post'])
+def create_inventory():
+    if "accname" in request.form:
+        debug("made it to the form")
+        db = get_db()
+        cursor = db.cursor()
+        name = request.form["accname"]
+        type = request.form["type"]
+        balance = request.form["balance"]
+        sec = request.form["sec"]
+        company = request.form["company"]
+        price = request.form["price"]
+        quantity = request.form["quantity"]
 
+        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
+        db.commit()
+        acc_id = cursor.fetchone()[0]
+        cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        cursor.execute("INSERT INTO inventory(id, price, quantity) VALUES (%s, %s, %s);", [acc_id, price, quantity])
+        db.commit()
+        return redirect(url_for("portal"))
+    else:
+        db = get_db()
+        cursor = db.cursor()
+        companies = {}
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for id in comp_ids:
+            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            db.commit()
+            name = cursor.fetchone()[0]
+            companies[str(id[0])] = name;
+        return render_template("create_inventory.html", companies = companies);
+@app.route("/delete_account", methods=['get', 'post'])
+def delete_account():
+    if "id" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        id = request.form["id"]
+
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        got_it = False
+        for comp_id in comp_ids:
+            cursor.execute("SELECT * FROM owns where acc_id=%s AND comp_id=%s", [id, comp_id[0]])
+            db.commit()
+            accounts = cursor.fetchone()
+            if accounts is not None:
+                cursor.execute("SELECT * FROM INVENTORY WHERE id=%s", [id])
+                db.commit()
+                name = cursor.fetchone()
+                if name is not None:
+                    cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
+                db.commit()
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
+                cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
+                got_it = True
+                db.commit()
+        if got_it:
+            return redirect(url_for("portal"))
+        else:
+            return render_template("delete_account.html", error=1)
+    else:
+        return render_template("delete_account.html")
 ######################################################
-# Command line utilities 
-        
+# Command line utilities
+
 def init_db():
     db = get_db()
     with app.open_resource('init.sql', mode='r') as f:
@@ -164,10 +346,11 @@ def init_db_command():
     """Initializes the database."""
     print("Initializing DB.")
     init_db()
-
+    
 def populate_db():
     db = get_db()
-    exec("populate.py")
+    with app.open_resource('populate.py', mode='r') as f: #exec("populate.py")
+        db.cursor().execute(f.read())
     db.commit()
 
 @app.cli.command('populate')
@@ -175,8 +358,10 @@ def populate_db_command():
     """Populates the database with sample data."""
     print("Populating DB with sample data.")
     populate_db()
-    
-    
+
+
+
+
 #####################################################
 # Debugging
 

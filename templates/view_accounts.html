@@ -1,0 +1,45 @@
+<html>
+	<style>
+		table, th, td {
+			border: 1px solid black
+		}
+	</style>
+    <head>
+	<title> View Accounts </title>
+    </head>
+    <body>       
+	<h1> View Accounts </h1><br>
+	{% if step=="getcomp" %}
+		<form action="{{ url_for('view_accounts') }}" method="post">
+		View accounts for: <select name="company">
+		{% for id, name in companies.items() %}
+		<option value="{{id}}">{{name}}</option>
+		{% endfor %}
+		</select><br><br>
+	
+		<input type="hidden" name="step" value="view">
+		<input type="submit">
+		</form>
+
+	{% elif step=="view"%}
+		<a href= '{{url_for('portal')}}'>Return to Portal</a><br><br>
+		<table style = "border: 1px solid black;">
+			<tr>
+				<th> ID </th>
+				<th> NAME </th>
+				<th> TYPE </th>
+				<th> BALANCE </th>
+			</tr>
+			{% for i in range(0, len) %}
+				<tr>
+					<td> {{accounts[i][0]}} </td>
+					<td> {{accounts[i][1]}} </td>
+					<td> {{accounts[i][2]}} </td>
+					<td> {{accounts[i][3]}} </td>
+
+				</tr>
+			{% endfor %}
+		</table>
+	{% endif %}
+    </body>
+</html>
