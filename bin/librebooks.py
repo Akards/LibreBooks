@@ -157,9 +157,8 @@ def create_account():
         name = request.form["accname"]
         type = request.form["type"]
         balance = request.form["balance"]
-        sec = request.form["sec"]
         company = request.form["company"]
-        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
+        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, "0"])
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
@@ -188,12 +187,11 @@ def create_inventory():
         name = request.form["accname"]
         type = request.form["type"]
         balance = request.form["balance"]
-        sec = request.form["sec"]
         company = request.form["company"]
         price = request.form["price"]
         quantity = request.form["quantity"]
 
-        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
+        cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, "0"])
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
