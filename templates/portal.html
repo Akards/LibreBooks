@@ -10,8 +10,11 @@
                 <input type="submit" value="Manage Invoices"></center></form>
         <center><form action="{{ url_for('manage_payers') }}">
             <input type="submit" value="Manage Payers"></center></form>
-            <center><form action="{{ url_for('create_account') }}">
+        <center><form action="{{ url_for('create_account') }}">
             <input type="submit" value="Create Account"></center></form><br>
+
+        <center><form action="{{ url_for('view_accounts') }}">
+            <input type="submit" value="View Accounts"></center></form><br>
     {% endif %}
     <button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
 </body>
