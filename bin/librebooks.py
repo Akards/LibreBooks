@@ -47,6 +47,65 @@ def homepage():
 def create_tran():
 	return render_template("Create_Tran.html", Total = "0")
 
+@app.route("/manage_invoices", methods=['get', 'post'])
+def manage_invoices():
+    if session['logged on'] == True and session['type'] == "accountant":
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+
+        q8= 'select payer.full_name, payer.company_name, account.name, account.date_created, account.amount, account.id,'
+        q9 = ' account.comp_name from (select invoice.id, accountant_account.comp_name, accountant_account.acc_id,' 
+        q10 = 'invoice.payer, invoice.date_created, accountant_account.name, invoice.amount from '
+        q11 = '(select * from (select * from (select * from (select accountant.id, accountant.security_level,'
+        q12 = 'can_access.comp_id from accountant join can_access on accountant.id=can_access.user_id where id='
+        q13 = user_id + ') as comp_access join company on comp_access.comp_id = company.id) as comp_access join owns ' 
+        q14 = 'on comp_access.comp_id = owns.comp_id) as comp_owns join (select account.id, account.name, ' 
+        q15 = 'account.security_level from account) as account on comp_owns.acc_id = account.id and ' 
+        q16 = 'comp_owns.security_level >= account.security_level) as accountant_account join invoice '
+        q17 = 'on accountant_account.acc_id = invoice.account) as account join payer on payer.id = account.payer'
+
+        if "step" not in request.form:
+            db = get_db()
+            cursor = db.cursor()
+            query= q8+q9+q10+q11+q12+q13+q14+q15+q16+q17
+            cursor.execute(query)
+            invoice_list= cursor.fetchall()
+            print("found invoices")
+            return render_template("manage_invoices.html", step="invoice_list", invoices=invoice_list)
+        elif request.form["step"] == "paid_invoice":
+            invoice = str(request.form["postid"])
+            invoice=invoice.replace("[","")
+            invoice=invoice.replace("]","")
+            db = get_db()
+            cursor = db.cursor()
+            query= "select invoice.amount from invoice where invoice.id = " + invoice
+            cursor.execute(query)
+            amount= cursor.fetchone()
+            q6= "(select invoice.account from invoice where invoice.id = " + invoice + ") "
+            q7= "update account set balance = balance + " + str(amount[0]) + " where id = "
+            query = q7 + q6
+            cursor.execute(query)
+            db.commit()
+            query = "delete from invoice where id = " + invoice
+            cursor.execute(query)
+            db.commit()
+            return render_template("manage_invoices.html", step="written_off",)
+        elif request.form["step"] == "unpaid_invoice":
+            invoice = str(request.form["postid"])
+            invoice=invoice.replace("[","")
+            invoice=invoice.replace("]","")
+            db = get_db()
+            cursor = db.cursor()
+            query = "delete from invoice where id = " + invoice
+            cursor.execute(query)
+            db.commit()
+            return render_template("manage_invoices.html", step="written_off")
+        elif request.form["step"] == "back":
+            return redirect(url_for("portal"))
+    else:
+        return redirect(url_for("home"))
+
 @app.route("/manage_payers", methods=['get', 'post'])
 def manage_payers():
     if session['logged on'] == True and session['type'] == "accountant":

@@ -1,0 +1,38 @@
+<html>
+    <title>Manage Invoices</title>
+        <body>
+            <h1><center>Manage Invoices</center></h1>
+            {% if step == 'invoice_list' %}
+                {% if invoices|length > 0 %}
+                    <center><form action="{{ url_for('manage_invoices') }}" method="post">
+                    <table border="1">
+                    <tr><td></td><td>Account Name</td><td>Paying Company</td><td>Receiving Company</td><td>Payer</td><td>Date Added</td><td>Amount</td></tr>
+                        {% for invoice in invoices %}
+                            <tr><td><input type="radio" name="postid" value="{{invoice.id}}"></td>
+                            <td>{{ invoice.name }}</td><td>{{ invoice.company_name }}</td><td>{{ invoice.comp_name }}</td><td>{{ invoice.full_name }}</td><td>{{ invoice.date_created }}</td><td>{{ invoice.amount }}</td></tr>
+                        {% endfor %}
+                        </table></center>
+                        <center><input type="radio" name="step" value="paid_invoice"> Paid Invoice <br>
+                        <input type="radio" name="step" value="unpaid_invoice"> Unpaid Invoice <br><br></center>
+                        <center><input type="submit" value="Update"></center>
+                    </form><br>
+                    <form action="{{ url_for('manage_invoices') }}" method="post">
+                        <input type="hidden" name="step" value="back">
+                        <center><input type="submit" value="Back"></center>
+                    </form>
+                {% else %}
+                    <center>There are no invoices associated with your assigned accounts.</center><br>
+                    <form action="{{ url_for('manage_invoices') }}" method="post">
+                        <input type="hidden" name="step" value="back">
+                        <center><input type="submit" value="Back"></center>
+                    </form>
+                {%endif%}
+            {% elif step == 'written_off' %}
+                <center>Invoice written off</center><br>
+                <form action="{{ url_for('manage_invoices') }}" method="post">
+                        <input type="hidden" name="step" value="back">
+                        <center><input type="submit" value="Back to Portal"></center>
+                    </form>
+            {% endif %}
+        </body>
+</html>
