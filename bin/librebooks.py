@@ -304,7 +304,7 @@ def create_account():
         name = request.form["accname"]
         type = request.form["type"]
         balance = request.form["balance"]
-        sec = request.form["sec"]
+        sec = "0"
         company = request.form["company"]
         cursor.execute("INSERT INTO account(name, type, balance, security_level) VALUES (%s, %s, %s, %s) RETURNING id;", [name, type, balance, sec])
         db.commit()
@@ -334,7 +334,7 @@ def create_inventory():
         name = request.form["accname"]
         type = request.form["type"]
         balance = request.form["balance"]
-        sec = request.form["sec"]
+        sec = "0"
         company = request.form["company"]
         price = request.form["price"]
         quantity = request.form["quantity"]
