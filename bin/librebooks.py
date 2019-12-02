@@ -17,7 +17,7 @@ app.secret_key=os.urandom(32)
 def connect_db():
     """Connects to the database."""
     debug("Connecting to DB.")
-    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="accountingdb", 
+    conn = psycopg2.connect(host=IP_ADDR, user="postgres", password="rhodes", dbname="librabooks", 
         cursor_factory=psycopg2.extras.DictCursor)
     return conn
     
