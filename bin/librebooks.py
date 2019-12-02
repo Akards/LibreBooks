@@ -112,9 +112,8 @@ def manage_payers():
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
         user_id=user_id.replace("]","")
-        #user_id='88'
         #cursor.execute('select full_name, email, company_name from payer order by full_name')
-        q0 = 'select payer.full_name, payer.email, payer.company_name, account.name from ('
+        q0 = 'select payer.id, payer.full_name, payer.email, payer.company_name, account.name from ('
         q1 = 'select accountant_account.acc_id, invoice.payer, accountant_account.name from (select * from (select * from (select accountant.id,'
         q2 = 'accountant.security_level, can_access.comp_id from accountant join can_access on accountant.id=can_access.user_id where id= '
         q3 = user_id + ') as comp_access join owns on comp_access.comp_id = owns.comp_id)' 
@@ -137,6 +136,11 @@ def manage_payers():
             query='insert into payer(pass_hash, email, full_name, company_name) values'
             cursor.execute(query + '(%s, %s, %s, %s)',(p,e,n,c))
             db.commit()
+            cursor.execute('select payer.id from payer where pass_hash=%s and email=%s and full_name= %s and company_name=%s',(str(p),str(e),str(n),str(c)))
+            id_payer = cursor.fetchone()
+            query = 'insert into invoice(account, amount, payer) values '
+            cursor.execute(query + '(%s,%s,%s)',(request.form['account'], request.form['amount'],id_payer[0]))
+            db.commit()
             print("committed")
             return render_template('manage_payers.html', step="done_adding")
         elif request.form["step"] == "drop":
@@ -152,20 +156,31 @@ def manage_payers():
         elif request.form["step"] == 'deleted':
             db = get_db()
             cursor = db.cursor()
-            payer_id = 'select invoice.payer from ' + q1 + q2 + q3 + q4 + q5 + q6
-            cursor.execute(payer_id)
-            payers = cursor.fetchall()
-            for payer in payers:
-                cursor.execute('delete from payer where id=%s',[payer])
+            #payer_id = 'select invoice.payer from (' + q1 + q2 + q3 + q4 + q5 + q6 + ') as invoice'
+            payer_id = request.form.getlist("payerid")
+            #payer_id = payer_id[0]
+            #payer_id=payer_id.replace("[","")
+            #payer_id=payer_id.replace("]","")
+            print("##############################")
+            print(payer_id)
+            #payer_id = 'select invoice.payer from invoice where payer=%s',(request.form["postid"])
+            #cursor.execute('select invoice.payer from invoice where payer=%s',(payer_id))
+            #payers = cursor.fetchall()
+            print('******************************')
+            #print(payers)
+            for payer in payer_id:
                 cursor.execute('delete from invoice where payer=%s',[payer])
                 db.commit()
-            return render_template('manage_payers.html', step="delete_done"),
+                cursor.execute('delete from payer where id=%s',[payer])
+                db.commit()
+            return render_template('manage_payers.html', step="delete_done")
         elif request.form["step"] == 'portal':
             return redirect(url_for("portal"))
         elif request.form["step"] == 'back':
             return redirect(url_for("manage_payers"))
     else:
         return redirect(url_for("home"))
+
 
 @app.route("/portal")
 def portal():
