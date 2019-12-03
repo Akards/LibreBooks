@@ -2,7 +2,7 @@
 <body>
     <center><h2>Welcome {{name}}</h2><br>
     {% if type == "accountant" %}        
-        <center><form action="{{ url_for('create_tran') }}">
+        <center><form action="{{ url_for('create_tran_get_type') }}">
                 <input type="submit" value="Create Transaction"></center></form>
         <center><form action="{{ url_for('create_inventory') }}">
                 <input type="submit" value="Create Inventory"></center></form>
@@ -12,6 +12,8 @@
             <input type="submit" value="Manage Payers"></center></form>
         <center><form action="{{ url_for('create_account') }}">
             <input type="submit" value="Create Account"></center></form><br>
+        <center><form action="{{ url_for('view_journal') }}">
+            <input type="submit" value="View Journal"></center></form><br>
 
         <center><form action="{{ url_for('view_accounts') }}">
             <input type="submit" value="View Accounts"></center></form><br>

@@ -9,32 +9,31 @@
 </head>
 <body>
 
-<h2>Basic HTML Table</h2>
+<h2>Create New Transaction</h2>
 
 <table style="width:500px;border: 1px solid black">
   <tr>
-    <th>Debit</th>
-    <th></th> 
-    <th>Credit</th>
-    <th></th>
+    <th>Name</th>
+    <th>Amt+</th> 
+    <th>Amt-</th>
   </tr>
   	 <!-- As many rows as the category (Credit or Debit) with the most entries. In
   	each row, four columns - Credit account name, Amount Credited, Debit Account name, 
   	Amount Debited. 
-  	An example row may look like: -->
+  	An example row may look like:
   	<tr>
-  		<td>Cash</td>
-  		<td>20.00</td>
   		<td>MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER</td>
-  		<td>(20.00)</td>
+  		<td>20.00</td>
+  		<td></td>
   	</tr>
-  	<!--This would be a simple transaction where twenty dollars is exchanged for twenty dollars worth
+  	This would be a simple transaction where twenty dollars is exchanged for twenty dollars worth
   	of pasta -->
+  	{{ Rows | safe }}
 </table>
-<p>Total: {{Total}}</p> <!-- This is the sum of all debits minus the sum of all credits. Will be
+{{Total | safe}} <!-- This is the sum of all debits minus the sum of all credits. Will be
 red if not equal to 0 -->
-<button type="button" >Add Debit Account</button> <br/>
+<form method="get" action="select_acct"><button type="submit">Add Debit Account</button></form>
 <button type="button" >Add Credit Account</button> <br/>
-<button type="button" >Submit</button> <br/> <!-- returns with an error if total != 0 -->
+{{ButtonOrError | safe }}
 </body>
 </html>
