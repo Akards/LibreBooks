@@ -4,7 +4,7 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, render_template, g, session, redirect, url_for
-from flask_table import Table, Col, DatetimeCol, ButtonCol
+from flask_table import Table, Col, DatetimeCol, LinkCol
 
 # PostgreSQL IP address
 IP_ADDR = "34.69.97.14"
@@ -18,7 +18,9 @@ class invoice_table(Table):
     account_name = Col("Account Name")
     amount = Col("Amount")
     date_created = DatetimeCol("Date Issued")
-    pay = ButtonCol("Pay", "pay_invoice", form_attrs=dict(account_id="account_id"), form_hidden_fields=dict(step="selected"))
+    pay = LinkCol("Pay", "pay_invoices", url_kwargs=dict(account='account'))
+    #pay = ButtonCol("Pay", "pay_invoices", form_hidden_fields=dict(step="selected", account="account"))
+    #, form_attrs=dict(account="account")
 
 class invoice_entry(object):
     def __init__(self, account, account_name, amount, date):
@@ -26,6 +28,7 @@ class invoice_entry(object):
         self.account_name = account_name
         self.amount = amount
         self.date = date
+        self.pay = account
 
 ####################################################
 # Routes
@@ -141,10 +144,10 @@ def accountant_login():
 
 
 @app.route("/pay_invoices", methods=['get', 'post'])
-def pay_invoice():
+def pay_invoices():
     #if session['logged on'] != True:
     #    return redirect(url_for("/"))
-    if "step" not in request.form:
+    if request.args.get('account') == None:
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
         user_id=user_id.replace("]","")
@@ -158,13 +161,14 @@ def pay_invoice():
         rowlist = cursor.fetchall()
         table = invoice_table(rowlist)
         return table.__html__()
-    elif request.form["step"] == "selected":
+    else:
         debug("paying invoice")
+        account_id = request.args.get('account')
         db = get_db()
         cursor=db.cursor()
-        session['user'] = id
-        
-    return render_template("pay_invoices.html")
+        cursor.execute("delete from invoice where account = " + account_id)
+        db.commit()
+        return redirect(url_for("pay_invoices"))
 
 
 
