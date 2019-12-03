@@ -4,6 +4,7 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, render_template, g, session, redirect, url_for
+from flask_table import Table, Col, DatetimeCol, LinkCol
 
 # PostgreSQL IP address
 IP_ADDR = "34.69.97.14"
@@ -36,6 +37,23 @@ def close_db(error):
     debug("Disconnecting from DB.")
     if hasattr(g, 'pg_db'):
         g.pg_db.close()
+
+class invoice_table(Table):
+    account = Col("Account ID")
+    account_name = Col("Account Name")
+    amount = Col("Amount")
+    date_created = DatetimeCol("Date Issued")
+    pay = LinkCol("Pay", "pay_invoices", url_kwargs=dict(account='account'))
+    #pay = ButtonCol("Pay", "pay_invoices", form_hidden_fields=dict(step="selected", account="account"))
+    #, form_attrs=dict(account="account")
+
+class invoice_entry(object):
+    def __init__(self, account, account_name, amount, date):
+        self.account = account
+        self.account_name = account_name
+        self.amount = amount
+        self.date = date
+        self.pay = account
 
 ####################################################
 # Routes
@@ -248,6 +266,33 @@ def payer_login():
             return redirect(url_for("portal"))
 
 
+@app.route("/pay_invoices", methods=['get', 'post'])
+def pay_invoices():
+    #if session['logged on'] != True:
+    #    return redirect(url_for("/"))
+    if request.args.get('account') == None:
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+        db = get_db()
+        cursor = db.cursor()
+        q1 = "select account.id as account, account.name as account_name, invoice.amount as amount, "
+        q2 = "invoice.date_created as date_created from account join invoice on account.id = invoice.account "
+        q3 = "and invoice.payer = " + user_id
+        cursor.execute(q1+q2+q3)
+        db.commit()
+        rowlist = cursor.fetchall()
+        table = invoice_table(rowlist)
+        return table.__html__()
+    else:
+        debug("paying invoice")
+        account_id = request.args.get('account')
+        db = get_db()
+        cursor=db.cursor()
+        cursor.execute("delete from invoice where account = " + account_id)
+        db.commit()
+        return redirect(url_for("pay_invoices"))
+
 @app.route("/acountant_login", methods=['get', 'post'])
 def accountant_login():
     if "step" not in request.form:
@@ -286,6 +331,8 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+          
+          
 @app.route("/view_accounts", methods=['get', 'post'])
 def view_accounts():
     if "step" not in request.form:
@@ -301,7 +348,6 @@ def view_accounts():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("view_accounts.html", step="getcomp", companies=companies)
-
     elif request.form["step"] == "view":
         db = get_db()
         cursor = db.cursor()
@@ -380,7 +426,6 @@ def delete_account():
         db = get_db()
         cursor = db.cursor()
         id = request.form["id"]
-
         cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
