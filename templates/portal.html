@@ -20,6 +20,8 @@
        <center><form action="{{ url_for('delete_account') }}">
             <input type="submit" value="Delete Account"></center></form><br>
     {% elif type == "payer" %}
+	<center><form action="{{ url_for('pay_invoices') }}">
+            <input type="submit" value="Pay Invoices"></center></form>
     {% endif %}
     <button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
 </body>
