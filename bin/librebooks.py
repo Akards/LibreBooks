@@ -4,6 +4,7 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, render_template, g, session, redirect, url_for
+from flask_table import Table, Col, DatetimeCol, ButtonCol
 
 # PostgreSQL IP address
 IP_ADDR = "34.69.97.14"
@@ -11,6 +12,20 @@ IP_ADDR = "34.69.97.14"
 # Create the application
 app = Flask(__name__, template_folder='../templates')
 app.secret_key=os.urandom(32)
+
+class invoice_table(Table):
+    account = Col("Account ID")
+    account_name = Col("Account Name")
+    amount = Col("Amount")
+    date_created = DatetimeCol("Date Issued")
+    pay = ButtonCol("Pay", "pay_invoice", form_attrs=dict(account_id="account_id"), form_hidden_fields=dict(step="selected"))
+
+class invoice_entry(object):
+    def __init__(self, account, account_name, amount, date):
+        self.account = account
+        self.account_name = account_name
+        self.amount = amount
+        self.date = date
 
 ####################################################
 # Routes
@@ -123,6 +138,35 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+
+
+@app.route("/pay_invoices", methods=['get', 'post'])
+def pay_invoice():
+    #if session['logged on'] != True:
+    #    return redirect(url_for("/"))
+    if "step" not in request.form:
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+        db = get_db()
+        cursor = db.cursor()
+        q1 = "select account.id as account, account.name as account_name, invoice.amount as amount, "
+        q2 = "invoice.date_created as date_created from account join invoice on account.id = invoice.account "
+        q3 = "and invoice.payer = " + user_id
+        cursor.execute(q1+q2+q3)
+        db.commit()
+        rowlist = cursor.fetchall()
+        table = invoice_table(rowlist)
+        return table.__html__()
+    elif request.form["step"] == "selected":
+        debug("paying invoice")
+        db = get_db()
+        cursor=db.cursor()
+        session['user'] = id
+        
+    return render_template("pay_invoices.html")
+
+
 
 #####################################################
 # Database handling 
