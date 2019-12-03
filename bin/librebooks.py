@@ -4,7 +4,10 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, render_template, g, session, redirect, url_for
+
 from flask_table import Table, Col, DatetimeCol, LinkCol
+from datetime import datetime
+
 
 # PostgreSQL IP address
 IP_ADDR = "34.69.97.14"
@@ -61,9 +64,43 @@ class invoice_entry(object):
 def homepage():
     return render_template("home.html")
 
+#this is terrible terrible form but I don't see why it wouldnt work. It's not threadsafe but neither is flask so who really cares
+tran_accts = []
 @app.route("/create_tran")
 def create_tran():
-	return render_template("Create_Tran.html", Total = "0")
+    global tran_accts
+    rows = ""
+    total = ""
+    buttonOrError = ""
+    sum = 0.0
+    for i in range(0, len(tran_accts)):
+        if tran_accts[i][0] == True: #debit
+            rows = rows + "<tr><td>" + tran_accts[i][1] + "</td><td>" + str(tran_accts[i][2]) + "</td><td></td></tr>"
+            sum = sum + tran_accts[i][2]
+        else:
+            rows = rows + "<tr><td>" + tran_accts[i][1] + "</td><td></td><td>(" + str(tran_accts[i][2]) + ")</td></tr>"
+            sum = sum - tran_accts[i][2]
+    if sum != 0:
+        total = '<p style="color:red";>Total: <b>' + str(sum) + '</b></p>'
+        buttonOrError = '<p style="color:red";>Cannot post with non-zero balance</p>'
+    else:
+        total = "<p>Total: 0</p>"
+        buttonOrError = '<form method="get" action="portal"><button type="submit">post</button></form>'
+        #buttonOrError = '<button type="button" >Post</button> <br/>'
+    return render_template("Create_Tran.html", Rows = rows, Total = total, ButtonOrError = buttonOrError)
+
+notVisited = True #I couldn't get get requests to work, im just gonna do this abomination and figure it out later
+@app.route("/select_acct", methods=['get', 'post'])
+def select_acct():
+    global notVisited
+    global tran_accts
+    if notVisited == True:
+        notVisited = False
+        tran_accts = [(True, "Cash", 15), (False, "MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER", 20)]
+    else:
+        tran_accts = [(True, "Cash", 15), (False, "MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER", 15)]
+    return render_template("select_acct.html")
+
 
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
@@ -451,6 +488,24 @@ def delete_account():
             return render_template("delete_account.html", error=1)
     else:
         return render_template("delete_account.html")
+importantValue = True
+@app.route("/view_journal")
+def view_journal():
+    global importantValue
+    global oz1
+    global oz2
+    if importantValue == True:
+        importantValue = False
+        return render_template("view_journal.html", bod = "")
+    else:
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        return render_template("view_journal.html", bod = oz1 + dt_string + oz2)
+
+@app.route("/create_tran_get_type", methods = ['POST', 'GET'])
+def create_tran_get_type():
+    return render_template("Create_Tran_Get_Type.html")
+
 ######################################################
 # Command line utilities
 
@@ -489,3 +544,6 @@ def debug(s):
     if FLASK_DEBUG is set."""
     if app.config['DEBUG']:
         print(s)
+
+oz1 = '<table style="width:500px;border: 1px solid black"> <tr bgcolor="#ddd"><td>SALE 1</td><td>'
+oz2 = '</td><td>15.00</td></tr> <tr><td>Cash</td><td>15.00</td></tr> <tr><td>MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER</td><td></td><td>(15.00)</td></table>'
