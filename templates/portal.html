@@ -1,6 +1,23 @@
 <html>
 <body>
     <center><h2>Welcome {{name}}</h2><br>
+    {% if type == "accountant" %}        
+        <center><form action="{{ url_for('create_tran') }}">
+                <input type="submit" value="Create Transaction"></center></form>
+        <center><form action="{{ url_for('create_inventory') }}">
+                <input type="submit" value="Create Inventory"></center></form>
+        <center><form action="{{ url_for('manage_invoices') }}">
+                <input type="submit" value="Manage Invoices"></center></form>
+        <center><form action="{{ url_for('manage_payers') }}">
+            <input type="submit" value="Manage Payers"></center></form>
+        <center><form action="{{ url_for('create_account') }}">
+            <input type="submit" value="Create Account"></center></form>
+        <center><form action="{{ url_for('view_accounts') }}">
+            <input type="submit" value="View Accounts"></center></form>
+       <center><form action="{{ url_for('delete_account') }}">
+            <input type="submit" value="Delete Account"></center></form><br>
+    {% elif type == "payer" %}
+    {% endif %}
     <button onclick="window.location.href = '{{ url_for('logout') }}';">logout</button></center>
 </body>
 </html>

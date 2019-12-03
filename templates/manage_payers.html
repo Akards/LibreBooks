@@ -1,0 +1,75 @@
+<html>
+    <title>Manage Payers</title>
+    <body>
+        {% if step=="add_or_drop" %}
+            <center><h1>Manage Payers<h1></center><br>
+            <p><center>Would you like to add or drop a payer?</p><br>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <input type="hidden" name="step" value="add">
+                <input type="submit" value="Add Payer">
+            </form>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <input type="hidden" name="step" value="drop">
+                <input type="submit" value="Drop Payer">            
+            </form></center>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <input type="hidden" name="step" value="portal"><br><br>
+                <center><input type="submit" value="Back to Portal"></center>
+            </form>
+        {% elif step=="add" %}
+            <center><h1>Create Payer Account</h1></center>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <center>Email: <input type="text" name="email"><br>
+                Full Name: <input type="text" name="name"><br>
+                Password:  <input type="text" name="password"><br>
+                Company:   <input type="text" name="company"><br>
+                <br><center>Create Invoice</center>
+                Account:   <input type="text" name="account"><br>
+                Amount:   <input type="text" name="amount"><br>
+                <input type="hidden" name="step" value="added">
+                <input type="submit" value="Add payer"></center>
+            </form>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <input type="hidden" name="step" value="back">
+                <center><input type="submit" value="Back"></center>
+            </form>
+        {% elif step=="drop" %}
+            <center><h1>Delete Payer Account</h1></center>
+            {% if payers|length > 0 %}
+                <center><form action="{{ url_for('manage_payers') }}" method="post">
+                    <table border="1">
+                    <tr><td></td><td>Name</td><td>Email</td><td>Company</td><td>Account Name</td></tr>
+                    {% for payer in payers %}
+                        <tr><td><input type="checkbox" name="payerid" value="{{payer.id}}"></td>
+                        <td>{{ payer.full_name }}</td><td>{{ payer.email }}</td><td>{{ payer.company_name }}</td><td>{{ payer.name }}</td></tr>
+                    {% endfor %}
+                    </table></center>
+                    <input type="hidden" name="step" value="deleted">
+                    <center><input type="submit" value="Delete"></center>
+                </form><br>
+                <form action="{{ url_for('manage_payers') }}" method="post">
+                    <input type="hidden" name="step" value="back">
+                    <center><input type="submit" value="Back"></center>
+                </form>
+            {% else %}
+                <center>There are no payers associated with your assigned accounts.</center><br>
+                <form action="{{ url_for('manage_payers') }}" method="post">
+                    <input type="hidden" name="step" value="back">
+                    <center><input type="submit" value="Back"></center>
+                </form>
+            {%endif%}
+        {% elif step == 'done_adding' %}
+            <center>Payer successfully added<br>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+            <input type="hidden" name="step" value="portal">
+            <input type="submit" value="Back to Portal"></center>
+            </form>
+        {% elif step=='delete_done' %}
+            <center>Payers successfully deleted<br>
+            <form action="{{ url_for('manage_payers') }}" method="post">
+                <input type="hidden" name="step" value="portal">
+                <input type="submit" value="Back to Portal"></center>
+            </form>
+        {%endif%}
+    </body>
+</html>
