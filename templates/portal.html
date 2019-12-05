@@ -14,11 +14,12 @@
             <input type="submit" value="Create Account"></center></form>
         <center><form action="{{ url_for('view_journal') }}">
             <input type="submit" value="View Journal"></center></form>
-
         <center><form action="{{ url_for('view_accounts') }}">
             <input type="submit" value="View Accounts"></center></form>
        <center><form action="{{ url_for('delete_account') }}">
-            <input type="submit" value="Delete Account"></center></form><br>
+            <input type="submit" value="Delete Account"></center></form>
+       <center><form action="{{ url_for('create_sale') }}">
+            <input type="submit" value="Create Sale"></center></form><br>
     {% elif type == "payer" %}
 	<center><form action="{{ url_for('pay_invoices') }}">
             <input type="submit" value="Pay Invoices"></center></form>
