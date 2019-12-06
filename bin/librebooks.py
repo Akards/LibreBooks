@@ -560,7 +560,7 @@ def create_sale():
             db.commit()
             all_accs.extend(cursor.fetchall())
 
-            cursor.execute("SELECT acc_id, name FROM inventory join (account join owns on acc_id = id) on acc_id = id where comp_id=%s;", [comp_id[0]])
+            cursor.execute("SELECT acc_id, name FROM inventory join (account join owns on acc_id = id) on acc_id = inventory.id where comp_id=%s;", [comp_id[0]])
             db.commit()
             inv_accs.extend(cursor.fetchall())
         return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs)
