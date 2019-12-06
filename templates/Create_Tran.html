@@ -32,8 +32,11 @@
 </table>
 {{Total | safe}} <!-- This is the sum of all debits minus the sum of all credits. Will be
 red if not equal to 0 -->
-<form method="get" action="select_acct"><button type="submit">Add Debit Account</button></form>
-<button type="button" >Add Credit Account</button> <br/>
+<form method="POST" action="select_acct">
+  <input type="submit" name=cred-submit value=Cred-submit></button>
+  <input type="submit" name=deb-submit value=Deb-submit ></button>
+
+</form>
 {{ButtonOrError | safe }}
 </body>
 </html>

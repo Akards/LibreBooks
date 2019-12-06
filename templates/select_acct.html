@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Select Account</title>
 	<style>
 		table, th, td {
   		border: 1px solid black;
@@ -11,6 +12,7 @@
 
 <h2>Basic HTML Table</h2>
 
+<form method="post" action="{{ url_for('create_tran') }}">
 <table style="width:500px;border: 1px solid black">
   <tr>
     <th>Type</th>
@@ -18,19 +20,11 @@
     <th>Select</th>
     <th>Amt</th>
   </tr>
-  <tr>
-    <td>Asset</td>
-    <td>Cash</td>
-    <td><input type="checkbox" name="c2" value="d2"></td>
-    <td><input type="text2" name="t2"></td>
-  </tr>
-  <tr>
-    <td>Asset</td>
-    <td>MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER</td>
-    <td><input type="checkbox" name="c1" value="d1"></td>
-    <td><input type="text" name="t1"></td>
-  </tr>
+  
+  {{Rows | safe}}
+
 </table>
-<form method="get" action="create_tran"><button type="submit">Submit</button></form>
+<input type="submit" value="Add Accounts" >Submit</button>
+</form>
 </body>
 </html>
