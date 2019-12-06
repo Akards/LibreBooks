@@ -423,6 +423,7 @@ def create_account():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_account.html", companies = companies);
+
 @app.route("/create_inventory", methods=['get', 'post'])
 def create_inventory():
     if "accname" in request.form:
