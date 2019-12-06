@@ -561,7 +561,7 @@ def create_sale():
             cursor.execute("SELECT acc_id, name FROM owns join account on acc_id = id where comp_id=%s", [comp_id[0]])
             db.commit()
             all_accs.extend(cursor.fetchall())
-            cursor.execute("SELECT id, name FROM inventory natural join account join owns on acc_id= id where comp_id=%s",
+            cursor.execute("SELECT id, name FROM inventory natural join (account join owns on acc_id = id) where comp_id=%s",
                            [comp_id[0]])
             db.commit()
             inv_accs.extend(cursor.fetchall())
