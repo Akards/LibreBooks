@@ -132,9 +132,12 @@ def select_acct():
         cursor = db.cursor()
         index = 0
         if "cred-submit" in request.form:
-            cursor.execute("SELECT name, type, id FROM account WHERE type=%s", [credTyp])
+            cursor.execute("SELECT name, type, acc_id FROM account join (owns join can_access on owns.id=comp_id) on acc_id=account.id join "
+                           "WHERE type=%s && user = %s", [credTyp, session['user'][0]])
         else:
-            cursor.execute("SELECT name, type, id FROM account WHERE type=%s", [debTyp])
+            cursor.execute(
+                "SELECT name, type, acc_id FROM account join (owns join can_access on owns.id=comp_id) on acc_id=account.id join "
+                "WHERE type=%s && user = %s", [debTyp, session['user'][0]])
         for acct in cursor:
             if index > 5:
                 break
