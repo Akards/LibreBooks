@@ -23,6 +23,9 @@
                 Full Name: <input type="text" name="name"><br>
                 Password:  <input type="text" name="password"><br>
                 Company:   <input type="text" name="company"><br>
+                <br><center>Create Invoice</center>
+                Account:   <input type="text" name="account"><br>
+                Amount:   <input type="text" name="amount"><br>
                 <input type="hidden" name="step" value="added">
                 <input type="submit" value="Add payer"></center>
             </form>
@@ -37,7 +40,7 @@
                     <table border="1">
                     <tr><td></td><td>Name</td><td>Email</td><td>Company</td><td>Account Name</td></tr>
                     {% for payer in payers %}
-                        <tr><td><input type="checkbox" name="postid" value="{{payer.id}}"></td>
+                        <tr><td><input type="checkbox" name="payerid" value="{{payer.id}}"></td>
                         <td>{{ payer.full_name }}</td><td>{{ payer.email }}</td><td>{{ payer.company_name }}</td><td>{{ payer.name }}</td></tr>
                     {% endfor %}
                     </table></center>
