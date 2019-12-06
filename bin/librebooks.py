@@ -10,7 +10,7 @@ from flask_table import Table, Col, DatetimeCol, LinkCol
 IP_ADDR = "34.69.97.14"
 
 # Create the application
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.secret_key=os.urandom(32)
 #####################################################
 # Database handling 
@@ -38,14 +38,14 @@ def close_db(error):
     if hasattr(g, 'pg_db'):
         g.pg_db.close()
 
+#####################################################
+# Class definitions
 class invoice_table(Table):
     account = Col("Account ID")
     account_name = Col("Account Name")
     amount = Col("Amount")
     date_created = DatetimeCol("Date Issued")
-    pay = LinkCol("Pay", "pay_invoices", url_kwargs=dict(account='account'))
-    #pay = ButtonCol("Pay", "pay_invoices", form_hidden_fields=dict(step="selected", account="account"))
-    #, form_attrs=dict(account="account")
+    pay = LinkCol("Pay", "pay_invoices", url_kwargs=dict(account='account', amount='amount'))
 
 class invoice_entry(object):
     def __init__(self, account, account_name, amount, date):
@@ -278,17 +278,19 @@ def pay_invoices():
         cursor = db.cursor()
         q1 = "select account.id as account, account.name as account_name, invoice.amount as amount, "
         q2 = "invoice.date_created as date_created from account join invoice on account.id = invoice.account "
-        q3 = "and invoice.payer = " + user_id
-        cursor.execute(q1+q2+q3)
+        q3 = "and invoice.payer = %s"
+        cursor.execute(q1+q2+q3, [user_id])
         db.commit()
         rowlist = cursor.fetchall()
         table = invoice_table(rowlist)
-        return table.__html__()
+        return render_template("pay_invoices.html", table=table.__html__())
     else:
         debug("paying invoice")
         account_id = request.args.get('account')
+        amount = request.args.get('amount')
         db = get_db()
         cursor=db.cursor()
+        cursor.execute("update account set balance = balance + %s where id = %s", [amount, account_id])
         cursor.execute("delete from invoice where account = " + account_id)
         db.commit()
         return redirect(url_for("pay_invoices"))
