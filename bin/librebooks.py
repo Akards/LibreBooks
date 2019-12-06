@@ -542,7 +542,7 @@ def view_journal():
     db2 = get_db()
     cursor = db.cursor()
     cursor2 = db2.cursor()
-    cursor.execute("SELECT * FROM transact")
+    cursor.execute("SELECT * FROM transact ORDER BY time_created DESC")
     for tran in cursor:
         cursor2.execute("SELECT ledger.amount, ledger.c_or_d, account.name FROM ledger INNER JOIN account ON account.id = ledger.acc_id WHERE trans_id=%s", [tran[0]])
         bodString = bodString + '<tr bgcolor="#ddd"><td>' + str(tran[3]) + '</td><td>' + str(tran[1]) + '</td><td>' + str(tran[2]) + '</td></tr>'
