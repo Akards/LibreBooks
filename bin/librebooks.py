@@ -105,7 +105,28 @@ def select_acct():
         tran_accts = [(True, "Cash", 15), (False, "MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER", 15)]
     return render_template("select_acct.html")
 
-
+@app.route("/create_accountant", methods=['get', 'post'])
+def create_accountant():
+    if 'step' not in request.form:
+        return render_template('create_accountant.html', step='new')
+    if request.form["step"] == "submitted":
+        db = get_db()
+        cursor = db.cursor()
+        password = request.form['password']
+        email = request.form['email']
+        name = request.form['name']
+        sec_lev = request.form['security_level']
+        query='insert into accountant(pass_hash, email, full_name, security_level) values'
+        cursor.execute(query + '(%s, %s, %s, %s)',(password, email, name, sec_lev))
+        db.commit()
+        cursor.execute("select id from accountant where email=%s and pass_hash=%s",[email,password])
+        db.commit()
+        id = cursor.fetchone()
+        session['logged on'] = True
+        session['user'] = id
+        session['type'] = "accountant"
+        return redirect(url_for("portal"))
+ 
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
     if 'logged on' not in session:

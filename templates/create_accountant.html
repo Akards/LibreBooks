@@ -1,0 +1,20 @@
+<html>
+    <title>Create Account</title>
+    <body>
+        {% if step=="new" %}
+            <center><h1>Create Accountant Account</h1></center>
+            <form action="{{ url_for('create_accountant') }}" method="post">
+                <center>Email: <input type="text" name="email"><br>
+                Full Name: <input type="text" name="name"><br>
+                Password:  <input type="text" name="password"><br>
+                Security Level: <select name="security_level">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select><br>
+                <input type="hidden" name="step" value="submitted">
+                <input type="submit" value="Create Account"></center>
+            </form>
+        {%endif%}
+    </body>
+</html>
