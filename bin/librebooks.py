@@ -538,6 +538,7 @@ def create_sale():
                            [trans, inv, amount, 'C'])
             cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
                            [trans, acc, amount, 'D'])
+            db.commit()
         else: #Selling Inventory
             cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, inv])
             cursor.execute("UPDATE inventory SET quantity=quantity-%s WHERE id = %s;", [num, inv])
@@ -546,6 +547,7 @@ def create_sale():
 
             cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, inv, amount, 'D'])
             cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, acc, amount, 'C'])
+            db.commit()
         return redirect(url_for("portal"))
 
     else:
