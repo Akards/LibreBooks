@@ -449,11 +449,11 @@ def create_inventory():
         db = get_db()
         cursor = db.cursor()
         companies = {}
-        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
         for id in comp_ids:
-            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            cursor.execute("SELECT comp_name from company where id=%s;", [id][0])
             db.commit()
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
@@ -480,7 +480,6 @@ def delete_account():
                 if name is not None:
                     cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
                 db.commit()
-                cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 got_it = True
                 db.commit()
