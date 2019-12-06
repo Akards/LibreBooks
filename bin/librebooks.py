@@ -564,7 +564,7 @@ def create_sale():
             cursor.execute("SELECT id, name FROM inventory natural join account where id=%s", [comp_id[0]])
             db.commit()
             inv_accs.extend(cursor.fetchall())
-        return render_template("create_sale", inventory = inv_accs, accounts = all_accs);
+        return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs);
 
 
 ######################################################
