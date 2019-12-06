@@ -429,6 +429,8 @@ def delete_account():
 
 @app.route("/view_journal")
 def view_journal():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     bodString = '<table style="width:500px;border: 1px solid black">'
     db = get_db()
     db2 = get_db()
@@ -487,6 +489,3 @@ def debug(s):
     if FLASK_DEBUG is set."""
     if app.config['DEBUG']:
         print(s)
-
-oz1 = '<table style="width:500px;border: 1px solid black"> <tr bgcolor="#ddd"><td>SALE 1</td><td>'
-oz2 = '</td><td>15.00</td></tr> <tr><td>Cash</td><td>15.00</td></tr> <tr><td>MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER</td><td></td><td>(15.00)</td></table>'
