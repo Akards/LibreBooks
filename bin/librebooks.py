@@ -518,7 +518,7 @@ def create_sale():
         num = int(request.form["num"]) #number of items
         type = request.form["type"] #Buying or Selling (B or S)
 
-        cursor.execute("SELECT price FROM inventory WHERE id = %s", [inv])
+        cursor.execute("SELECT price FROM inventory WHERE id = %s;", [inv])
         db.commit()
         price = int(cursor.fetchone()[0])
 
@@ -528,24 +528,24 @@ def create_sale():
         db.commit()
         trans = cursor.fetchone()[0]
         if type == 'B': #Buying Inventory
-            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s", [amount, inv])
-            cursor.execute("UPDATE inventory SET quantity=quantity+%s WHERE id = %s", [num, inv])
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity+%s WHERE id = %s;", [num, inv])
 
-            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s", [amount, acc])
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, acc])
 
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)",
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
                            [trans, inv, amount, 'C'])
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)",
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
                            [trans, acc, amount, 'D'])
         else: #Selling Inventory
-            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s", [amount, inv])
-            cursor.execute("UPDATE inventory SET quantity=quantity-%s WHERE id = %s", [num, inv])
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity-%s WHERE id = %s;", [num, inv])
 
-            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s", [amount, acc])
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, acc])
 
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)",
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
                            [trans, inv, amount, 'D'])
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)",
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
                            [trans, acc, amount, 'C'])
         return redirect(url_for("portal"))
 
@@ -554,18 +554,18 @@ def create_sale():
         cursor = db.cursor()
         inv_accs = []
         all_accs = []
-        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
         for comp_id in comp_ids:
-            cursor.execute("SELECT acc_id, name FROM owns join account on acc_id = id where comp_id=%s", [comp_id[0]])
+            cursor.execute("SELECT acc_id, name FROM owns join account on acc_id = id where comp_id=%s;", [comp_id[0]])
             db.commit()
             all_accs.extend(cursor.fetchall())
-            cursor.execute("SELECT id, name FROM inventory natural join (account join owns on acc_id = id) where comp_id=%s",
+            cursor.execute("SELECT id, name FROM inventory natural join (account join owns on acc_id = id) where comp_id=%s;",
                            [comp_id[0]])
             db.commit()
             inv_accs.extend(cursor.fetchall())
-        return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs);
+        return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs)
 
 
 ######################################################
