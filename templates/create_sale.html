@@ -1,0 +1,27 @@
+<html>
+    <head>
+	<title> Create Sale </title>
+    </head>
+    <body>       
+	<h1> Create Sale </h1><br>
+	<form action="{{ url_for('create_sale') }}" method="post">
+	Transaction Name (For Filing): <input type= "text" name = "trans_name"><br><br>
+	Inventory Account: <select name= "inv">
+		{% for inv in inventory %}
+		<option value="{{inv[0]}}">{{inv[1]}}</option>
+		{% endfor %}
+	</select><br><br>
+	Money Account: <select name= "acc">
+		{% for acc in accounts %}
+		<option value="{{acc[0]}}">{{acc[1]}}</option>
+		{% endfor %}
+	</select><br><br>
+	Mode: <select name= "type">
+		<option value="B">Buying</option>
+		<option value="S">Selling</option>
+	</select><br><br>
+	Quantity: <input type="number" name="num"><br><br>
+	<input type="submit"></center>
+	</form>
+    </body>
+</html>

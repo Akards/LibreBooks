@@ -4,13 +4,16 @@ import os
 import psycopg2
 import psycopg2.extras
 from flask import Flask, request, render_template, g, session, redirect, url_for
+
+from flask_table import Table, Col, DatetimeCol, LinkCol
 from datetime import datetime
+
 
 # PostgreSQL IP address
 IP_ADDR = "34.69.97.14"
 
 # Create the application
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.secret_key=os.urandom(32)
 #####################################################
 # Database handling 
@@ -38,6 +41,23 @@ def close_db(error):
     if hasattr(g, 'pg_db'):
         g.pg_db.close()
 
+#####################################################
+# Class definitions
+class invoice_table(Table):
+    account = Col("Account ID")
+    account_name = Col("Account Name")
+    amount = Col("Amount")
+    date_created = DatetimeCol("Date Issued")
+    pay = LinkCol("Pay", "pay_invoices", url_kwargs=dict(account='account', amount='amount'))
+
+class invoice_entry(object):
+    def __init__(self, account, account_name, amount, date):
+        self.account = account
+        self.account_name = account_name
+        self.amount = amount
+        self.date = date
+        self.pay = account
+
 ####################################################
 # Routes
 @app.route("/")
@@ -48,6 +68,8 @@ def homepage():
 tran_accts = []
 @app.route("/create_tran")
 def create_tran():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global tran_accts
     rows = ""
     total = ""
@@ -72,6 +94,8 @@ def create_tran():
 notVisited = True #I couldn't get get requests to work, im just gonna do this abomination and figure it out later
 @app.route("/select_acct", methods=['get', 'post'])
 def select_acct():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global notVisited
     global tran_accts
     if notVisited == True:
@@ -84,6 +108,8 @@ def select_acct():
 
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True and session['type'] == "accountant":
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
@@ -139,17 +165,18 @@ def manage_invoices():
         elif request.form["step"] == "back":
             return redirect(url_for("portal"))
     else:
-        return redirect(url_for("home"))
+        return redirect(url_for("homepage"))
 
 @app.route("/manage_payers", methods=['get', 'post'])
 def manage_payers():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True and session['type'] == "accountant":
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
         user_id=user_id.replace("]","")
-        #user_id='88'
         #cursor.execute('select full_name, email, company_name from payer order by full_name')
-        q0 = 'select payer.full_name, payer.email, payer.company_name, account.name from ('
+        q0 = 'select payer.id, payer.full_name, payer.email, payer.company_name, account.name from ('
         q1 = 'select accountant_account.acc_id, invoice.payer, accountant_account.name from (select * from (select * from (select accountant.id,'
         q2 = 'accountant.security_level, can_access.comp_id from accountant join can_access on accountant.id=can_access.user_id where id= '
         q3 = user_id + ') as comp_access join owns on comp_access.comp_id = owns.comp_id)' 
@@ -172,6 +199,11 @@ def manage_payers():
             query='insert into payer(pass_hash, email, full_name, company_name) values'
             cursor.execute(query + '(%s, %s, %s, %s)',(p,e,n,c))
             db.commit()
+            cursor.execute('select payer.id from payer where pass_hash=%s and email=%s and full_name= %s and company_name=%s',(str(p),str(e),str(n),str(c)))
+            id_payer = cursor.fetchone()
+            query = 'insert into invoice(account, amount, payer) values '
+            cursor.execute(query + '(%s,%s,%s)',(request.form['account'], request.form['amount'],id_payer[0]))
+            db.commit()
             print("committed")
             return render_template('manage_payers.html', step="done_adding")
         elif request.form["step"] == "drop":
@@ -187,14 +219,24 @@ def manage_payers():
         elif request.form["step"] == 'deleted':
             db = get_db()
             cursor = db.cursor()
-            payer_id = 'select invoice.payer from ' + q1 + q2 + q3 + q4 + q5 + q6
-            cursor.execute(payer_id)
-            payers = cursor.fetchall()
-            for payer in payers:
-                cursor.execute('delete from payer where id=%s',[payer])
+            #payer_id = 'select invoice.payer from (' + q1 + q2 + q3 + q4 + q5 + q6 + ') as invoice'
+            payer_id = request.form.getlist("payerid")
+            #payer_id = payer_id[0]
+            #payer_id=payer_id.replace("[","")
+            #payer_id=payer_id.replace("]","")
+            print("##############################")
+            print(payer_id)
+            #payer_id = 'select invoice.payer from invoice where payer=%s',(request.form["postid"])
+            #cursor.execute('select invoice.payer from invoice where payer=%s',(payer_id))
+            #payers = cursor.fetchall()
+            print('******************************')
+            #print(payers)
+            for payer in payer_id:
                 cursor.execute('delete from invoice where payer=%s',[payer])
                 db.commit()
-            return render_template('manage_payers.html', step="delete_done"),
+                cursor.execute('delete from payer where id=%s',[payer])
+                db.commit()
+            return render_template('manage_payers.html', step="delete_done")
         elif request.form["step"] == 'portal':
             return redirect(url_for("portal"))
         elif request.form["step"] == 'back':
@@ -202,8 +244,11 @@ def manage_payers():
     else:
         return redirect(url_for("home"))
 
+
 @app.route("/portal")
 def portal():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True:
         db = get_db()
         cursor = db.cursor()
@@ -219,7 +264,7 @@ def portal():
         name = cursor.fetchone()
         return render_template('portal.html', name=name[0], type=user_type)
     else:
-        return redirect(url_for("home")) ####from render_template("home.html")
+        return redirect(url_for("homepage"))
 
 @app.route("/logout")
 def logout():
@@ -268,6 +313,35 @@ def payer_login():
             return redirect(url_for("portal"))
 
 
+@app.route("/pay_invoices", methods=['get', 'post'])
+def pay_invoices():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
+    if request.args.get('account') == None:
+        user_id = str(session['user'])
+        user_id=user_id.replace("[","")
+        user_id=user_id.replace("]","")
+        db = get_db()
+        cursor = db.cursor()
+        q1 = "select account.id as account, account.name as account_name, invoice.amount as amount, "
+        q2 = "invoice.date_created as date_created from account join invoice on account.id = invoice.account "
+        q3 = "and invoice.payer = %s"
+        cursor.execute(q1+q2+q3, [user_id])
+        db.commit()
+        rowlist = cursor.fetchall()
+        table = invoice_table(rowlist)
+        return render_template("pay_invoices.html", table=table.__html__())
+    else:
+        debug("paying invoice")
+        account_id = request.args.get('account')
+        amount = request.args.get('amount')
+        db = get_db()
+        cursor=db.cursor()
+        cursor.execute("update account set balance = balance + %s where id = %s", [amount, account_id])
+        cursor.execute("delete from invoice where account = " + account_id)
+        db.commit()
+        return redirect(url_for("pay_invoices"))
+
 @app.route("/acountant_login", methods=['get', 'post'])
 def accountant_login():
     if "step" not in request.form:
@@ -306,8 +380,12 @@ def accountant_login():
             session['user'] = id
             session['type'] = "accountant"
             return redirect(url_for("portal"))
+          
+          
 @app.route("/view_accounts", methods=['get', 'post'])
 def view_accounts():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "step" not in request.form:
         db = get_db()
         cursor = db.cursor()
@@ -321,7 +399,6 @@ def view_accounts():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("view_accounts.html", step="getcomp", companies=companies)
-
     elif request.form["step"] == "view":
         db = get_db()
         cursor = db.cursor()
@@ -330,8 +407,11 @@ def view_accounts():
         db.commit();
         accounts = cursor.fetchall()
         return render_template("view_accounts.html", step="view", accounts=accounts, len=len(accounts));
+
 @app.route("/create_account", methods=['get', 'post'])
 def create_account():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "accname" in request.form:
         debug("made it to the form")
         db = get_db()
@@ -360,8 +440,11 @@ def create_account():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_account.html", companies = companies);
+
 @app.route("/create_inventory", methods=['get', 'post'])
 def create_inventory():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "accname" in request.form:
         debug("made it to the form")
         db = get_db()
@@ -378,6 +461,7 @@ def create_inventory():
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        db.commit()
         cursor.execute("INSERT INTO inventory(id, price, quantity) VALUES (%s, %s, %s);", [acc_id, price, quantity])
         db.commit()
         return redirect(url_for("portal"))
@@ -385,22 +469,24 @@ def create_inventory():
         db = get_db()
         cursor = db.cursor()
         companies = {}
-        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
         for id in comp_ids:
-            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            cursor.execute("SELECT comp_name from company where id=%s;", [id][0])
             db.commit()
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_inventory.html", companies = companies);
+
 @app.route("/delete_account", methods=['get', 'post'])
 def delete_account():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "id" in request.form:
         db = get_db()
         cursor = db.cursor()
         id = request.form["id"]
-
         cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
@@ -416,7 +502,6 @@ def delete_account():
                 if name is not None:
                     cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
                 db.commit()
-                cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 got_it = True
                 db.commit()
@@ -446,10 +531,74 @@ def view_journal():
     bodString = bodString + '</table>'
     return render_template("view_journal.html", bod = bodString)
 
-
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     return render_template("Create_Tran_Get_Type.html")
+
+@app.route("/create_sale", methods = ['get', 'post'])
+def create_sale():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
+    if "inv" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        trans_name = request.form["trans_name"]
+        inv = request.form["inv"]
+        acc = request.form["acc"]
+        num = int(request.form["num"]) #number of items
+        type = request.form["type"] #Buying or Selling (B or S)
+
+        cursor.execute("SELECT price FROM inventory WHERE id = %s;", [inv])
+        db.commit()
+        price = int(cursor.fetchone()[0])
+
+        amount = price * num
+
+        cursor.execute("INSERT INTO transact(amount, name) VALUES (%s, %s) RETURNING id;", [amount, trans_name])
+        db.commit()
+        trans = cursor.fetchone()[0]
+        if type == 'B': #Buying Inventory
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity+%s WHERE id = %s;", [num, inv])
+
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, acc])
+
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
+                           [trans, inv, amount, 'C'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
+                           [trans, acc, amount, 'D'])
+            db.commit()
+        else: #Selling Inventory
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity-%s WHERE id = %s;", [num, inv])
+
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, acc])
+
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, inv, amount, 'D'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, acc, amount, 'C'])
+            db.commit()
+        return redirect(url_for("portal"))
+
+    else:
+        db = get_db()
+        cursor = db.cursor()
+        inv_accs = []
+        all_accs = []
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for comp_id in comp_ids:
+            cursor.execute("SELECT acc_id, name FROM owns join account on acc_id = id where comp_id=%s;", [comp_id[0]])
+            db.commit()
+            all_accs.extend(cursor.fetchall())
+
+            cursor.execute("SELECT acc_id, name FROM inventory join (account join owns on acc_id = id) on acc_id = inventory.id where comp_id=%s;", [comp_id[0]])
+            db.commit()
+            inv_accs.extend(cursor.fetchall())
+        return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs)
+
 
 ######################################################
 # Command line utilities
