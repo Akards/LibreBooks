@@ -429,11 +429,21 @@ def delete_account():
 
 @app.route("/view_journal")
 def view_journal():
-    bodString = ""
+    bodString = '<table style="width:500px;border: 1px solid black">'
     db = get_db()
+    db2 = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
-    return render_template("view_journal.html", bod = oz1 + dt_string + oz2)
+    cursor2 = db2.cursor()
+    cursor.execute("SELECT * FROM transact")
+    for tran in cursor:
+        cursor2.execute("SELECT ledger.amount, ledger.c_or_d, account.name FROM ledger INNER JOIN account ON account.id = ledger.acc_id WHERE trans_id=%s", [tran[0]])
+        bodString = bodString + '<tr bgcolor="#ddd"><td>' + str(tran[3]) + '</td><td>' + str(tran[1]) + '</td><td>' + str(tran[2]) + '</td></tr>'
+        for entry in cursor2:
+            if entry[1] == "D":
+                bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
+    bodString = bodString + '</table>'
+    return render_template("view_journal.html", bod = bodString)
+
 
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
