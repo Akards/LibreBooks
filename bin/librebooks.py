@@ -426,19 +426,14 @@ def delete_account():
             return render_template("delete_account.html", error=1)
     else:
         return render_template("delete_account.html")
-importantValue = True
+
 @app.route("/view_journal")
 def view_journal():
-    global importantValue
-    global oz1
-    global oz2
-    if importantValue == True:
-        importantValue = False
-        return render_template("view_journal.html", bod = "")
-    else:
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        return render_template("view_journal.html", bod = oz1 + dt_string + oz2)
+    bodString = ""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+    return render_template("view_journal.html", bod = oz1 + dt_string + oz2)
 
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
