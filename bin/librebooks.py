@@ -554,7 +554,6 @@ def create_sale():
         cursor = db.cursor()
         inv_accs = []
         all_accs = []
-        id = request.form["id"]
         cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
