@@ -68,6 +68,8 @@ def homepage():
 tran_accts = []
 @app.route("/create_tran")
 def create_tran():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global tran_accts
     rows = ""
     total = ""
@@ -92,6 +94,8 @@ def create_tran():
 notVisited = True #I couldn't get get requests to work, im just gonna do this abomination and figure it out later
 @app.route("/select_acct", methods=['get', 'post'])
 def select_acct():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global notVisited
     global tran_accts
     if notVisited == True:
@@ -104,6 +108,8 @@ def select_acct():
 
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True and session['type'] == "accountant":
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
@@ -159,10 +165,12 @@ def manage_invoices():
         elif request.form["step"] == "back":
             return redirect(url_for("portal"))
     else:
-        return redirect(url_for("home"))
+        return redirect(url_for("homepage"))
 
 @app.route("/manage_payers", methods=['get', 'post'])
 def manage_payers():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True and session['type'] == "accountant":
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
@@ -239,6 +247,8 @@ def manage_payers():
 
 @app.route("/portal")
 def portal():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if session['logged on'] == True:
         db = get_db()
         cursor = db.cursor()
@@ -254,7 +264,7 @@ def portal():
         name = cursor.fetchone()
         return render_template('portal.html', name=name[0], type=user_type)
     else:
-        return redirect(url_for("home")) ####from render_template("home.html")
+        return redirect(url_for("homepage"))
 
 @app.route("/logout")
 def logout():
@@ -305,8 +315,8 @@ def payer_login():
 
 @app.route("/pay_invoices", methods=['get', 'post'])
 def pay_invoices():
-    #if session['logged on'] != True:
-    #    return redirect(url_for("/"))
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if request.args.get('account') == None:
         user_id = str(session['user'])
         user_id=user_id.replace("[","")
@@ -374,6 +384,8 @@ def accountant_login():
           
 @app.route("/view_accounts", methods=['get', 'post'])
 def view_accounts():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "step" not in request.form:
         db = get_db()
         cursor = db.cursor()
@@ -395,8 +407,11 @@ def view_accounts():
         db.commit();
         accounts = cursor.fetchall()
         return render_template("view_accounts.html", step="view", accounts=accounts, len=len(accounts));
+
 @app.route("/create_account", methods=['get', 'post'])
 def create_account():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "accname" in request.form:
         debug("made it to the form")
         db = get_db()
@@ -428,6 +443,8 @@ def create_account():
 
 @app.route("/create_inventory", methods=['get', 'post'])
 def create_inventory():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "accname" in request.form:
         debug("made it to the form")
         db = get_db()
@@ -464,6 +481,8 @@ def create_inventory():
 
 @app.route("/delete_account", methods=['get', 'post'])
 def delete_account():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "id" in request.form:
         db = get_db()
         cursor = db.cursor()
@@ -492,9 +511,12 @@ def delete_account():
             return render_template("delete_account.html", error=1)
     else:
         return render_template("delete_account.html")
+
 importantValue = True
 @app.route("/view_journal")
 def view_journal():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global importantValue
     global oz1
     global oz2
@@ -508,10 +530,14 @@ def view_journal():
 
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     return render_template("Create_Tran_Get_Type.html")
 
 @app.route("/create_sale", methods = ['get', 'post'])
 def create_sale():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     if "inv" in request.form:
         db = get_db()
         cursor = db.cursor()
