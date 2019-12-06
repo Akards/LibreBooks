@@ -441,6 +441,7 @@ def create_inventory():
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        db.commit()
         cursor.execute("INSERT INTO inventory(id, price, quantity) VALUES (%s, %s, %s);", [acc_id, price, quantity])
         db.commit()
         return redirect(url_for("portal"))
