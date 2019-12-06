@@ -425,6 +425,7 @@ def create_account():
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_account.html", companies = companies);
+
 @app.route("/create_inventory", methods=['get', 'post'])
 def create_inventory():
     if "accname" in request.form:
@@ -443,6 +444,7 @@ def create_inventory():
         db.commit()
         acc_id = cursor.fetchone()[0]
         cursor.execute("INSERT INTO owns(comp_id, acc_id) VALUES (%s, %s);", [company, acc_id])
+        db.commit()
         cursor.execute("INSERT INTO inventory(id, price, quantity) VALUES (%s, %s, %s);", [acc_id, price, quantity])
         db.commit()
         return redirect(url_for("portal"))
@@ -450,15 +452,16 @@ def create_inventory():
         db = get_db()
         cursor = db.cursor()
         companies = {}
-        cursor.execute("SELECT comp_id FROM can_access where user_id=%s", [session['user'][0]])
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
         db.commit()
         comp_ids = cursor.fetchall()
         for id in comp_ids:
-            cursor.execute("SELECT comp_name from company where id=%s", [id][0])
+            cursor.execute("SELECT comp_name from company where id=%s;", [id][0])
             db.commit()
             name = cursor.fetchone()[0]
             companies[str(id[0])] = name;
         return render_template("create_inventory.html", companies = companies);
+
 @app.route("/delete_account", methods=['get', 'post'])
 def delete_account():
     if "id" in request.form:
@@ -480,7 +483,6 @@ def delete_account():
                 if name is not None:
                     cursor.execute("DELETE FROM inventory WHERE id=%s", [id])
                 db.commit()
-                cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 cursor.execute("DELETE FROM owns WHERE acc_id=%s AND comp_id=%s;", [id, comp_id[0]])
                 got_it = True
                 db.commit()
@@ -507,6 +509,67 @@ def view_journal():
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
     return render_template("Create_Tran_Get_Type.html")
+
+@app.route("/create_sale", methods = ['get', 'post'])
+def create_sale():
+    if "inv" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        trans_name = request.form["trans_name"]
+        inv = request.form["inv"]
+        acc = request.form["acc"]
+        num = int(request.form["num"]) #number of items
+        type = request.form["type"] #Buying or Selling (B or S)
+
+        cursor.execute("SELECT price FROM inventory WHERE id = %s;", [inv])
+        db.commit()
+        price = int(cursor.fetchone()[0])
+
+        amount = price * num
+
+        cursor.execute("INSERT INTO transact(amount, name) VALUES (%s, %s) RETURNING id;", [amount, trans_name])
+        db.commit()
+        trans = cursor.fetchone()[0]
+        if type == 'B': #Buying Inventory
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity+%s WHERE id = %s;", [num, inv])
+
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, acc])
+
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
+                           [trans, inv, amount, 'C'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
+                           [trans, acc, amount, 'D'])
+            db.commit()
+        else: #Selling Inventory
+            cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, inv])
+            cursor.execute("UPDATE inventory SET quantity=quantity-%s WHERE id = %s;", [num, inv])
+
+            cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, acc])
+
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, inv, amount, 'D'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, acc, amount, 'C'])
+            db.commit()
+        return redirect(url_for("portal"))
+
+    else:
+        db = get_db()
+        cursor = db.cursor()
+        inv_accs = []
+        all_accs = []
+        cursor.execute("SELECT comp_id FROM can_access where user_id=%s;", [session['user'][0]])
+        db.commit()
+        comp_ids = cursor.fetchall()
+        for comp_id in comp_ids:
+            cursor.execute("SELECT acc_id, name FROM owns join account on acc_id = id where comp_id=%s;", [comp_id[0]])
+            db.commit()
+            all_accs.extend(cursor.fetchall())
+
+            cursor.execute("SELECT acc_id, name FROM inventory join (account join owns on acc_id = id) on acc_id = inventory.id where comp_id=%s;", [comp_id[0]])
+            db.commit()
+            inv_accs.extend(cursor.fetchall())
+        return render_template("create_sale.html", inventory = inv_accs, accounts = all_accs)
+
 
 ######################################################
 # Command line utilities
