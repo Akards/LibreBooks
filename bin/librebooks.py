@@ -533,21 +533,24 @@ def delete_account():
     else:
         return render_template("delete_account.html")
 
-importantValue = True
 @app.route("/view_journal")
 def view_journal():
     if 'logged on' not in session:
         return redirect(url_for('homepage'))
-    global importantValue
-    global oz1
-    global oz2
-    if importantValue == True:
-        importantValue = False
-        return render_template("view_journal.html", bod = "")
-    else:
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        return render_template("view_journal.html", bod = oz1 + dt_string + oz2)
+    bodString = '<table style="width:500px;border: 1px solid black">'
+    db = get_db()
+    db2 = get_db()
+    cursor = db.cursor()
+    cursor2 = db2.cursor()
+    cursor.execute("SELECT * FROM transact")
+    for tran in cursor:
+        cursor2.execute("SELECT ledger.amount, ledger.c_or_d, account.name FROM ledger INNER JOIN account ON account.id = ledger.acc_id WHERE trans_id=%s", [tran[0]])
+        bodString = bodString + '<tr bgcolor="#ddd"><td>' + str(tran[3]) + '</td><td>' + str(tran[1]) + '</td><td>' + str(tran[2]) + '</td></tr>'
+        for entry in cursor2:
+            if entry[1] == "D":
+                bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
+    bodString = bodString + '</table>'
+    return render_template("view_journal.html", bod = bodString)
 
 @app.route("/create_tran_get_type", methods = ['POST', 'GET'])
 def create_tran_get_type():
@@ -656,6 +659,3 @@ def debug(s):
     if FLASK_DEBUG is set."""
     if app.config['DEBUG']:
         print(s)
-
-oz1 = '<table style="width:500px;border: 1px solid black"> <tr bgcolor="#ddd"><td>SALE 1</td><td>'
-oz2 = '</td><td>15.00</td></tr> <tr><td>Cash</td><td>15.00</td></tr> <tr><td>MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER</td><td></td><td>(15.00)</td></table>'
