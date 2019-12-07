@@ -85,17 +85,20 @@ def create_tran():
             try:
                 float(dict(request.form)["VAL-" + entry])
             except:
-                render_template("Error_Template.html", Bod="Illegal value entry for one or more accounts.")
+                return render_template("Error_Template.html", Bod="Illegal value entry for one or more accounts.")
             acctNameToEnteredString[entry] = dict(request.form)["VAL-" + entry]
         if len(acctNameToCheckedString.keys()) == 0:
             return render_template("Error_Template.html", Bod="Add at least one account.")
         for entry in acctNameToCheckedString.keys():
             cursor.execute("SELECT name FROM account WHERE id=%s", [entry])
-            tran_accts.append((acctNameToCheckedString[entry] == 'D', cursor.fetchone()[0], acctNameToEnteredString[entry]))
+            tran_accts.append((acctNameToCheckedString[entry] == 'D', cursor.fetchone()[0], acctNameToEnteredString[entry], entry))
     else:
         tran_accts = []
-        debTyp = request.args['deb']
-        credTyp = request.args['cred']
+        try:  
+            debTyp = request.args['deb']
+            credTyp = request.args['cred']
+        except:
+            return render_template("Error_Template.html", Bod="You must select an account type for both credit and debit accounts.")
     rows = ""
     total = ""
     buttonOrError = ""
@@ -146,14 +149,43 @@ def select_acct():
 
 @app.route("/commit_add_transaction", methods=['get', 'post'])
 def commit_add_transaction():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global tran_accts
     #at this point we can assume Σ(Debits) == Σ(Credits). 
+    countcheck = dict()
+    for entry in tran_accts: #making sure no accounts are duplicated
+        try:
+            a = countcheck[entry[3]]
+        except:
+            countcheck[entry[3]] = 1
+        else:
+            return render_template("commit_add_transaction.html", Bod="Transaction may not have any repeating accounts.", link="create_tran_get_type", buttonMessage="Start Over")
     if request.form["tran_name"] == "":
         return render_template("commit_add_transaction.html", Bod="Transaction must have a title.", link="create_tran", buttonMessage="Back")
-    else if len(tran_accts) == 0:
+    elif len(tran_accts) == 0:
         return render_template("commit_add_transaction.html", Bod="Transaction must have at least two associated accounts.", link="create_tran", buttonMessage="Back")
     db = get_db()
-    db.execute("INSERT INTO transactions ")
+    cursor = db.cursor()
+    amt = 0.0
+    for entry in tran_accts:
+        if (entry[0]) == True:
+            amt = amt + float(entry[2])
+    cursor.execute("INSERT INTO transact(amount, name) VALUES (%s, %s) RETURNING id;", [amt, request.form["tran_name"]])
+    db.commit()
+    t_id = cursor.fetchone()[0]
+    cord = ''
+    if entry[0] == True:
+        cord = 'D'
+    elif entry[0] == False:
+        cord = 'C'
+    for entry in tran_accts:
+        cursor.execute("INSERT INTO ledger (trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)", [str(t_id), str(entry[3]), str(entry[2]), str(cord)])
+    db.commit()
+    tran_accts = []
+    return (render_template("commit_add_transaction.html", Bod="Transaction added successfully!", link="portal", buttonMessage="Home"))
+
+
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
     if 'logged on' not in session:
