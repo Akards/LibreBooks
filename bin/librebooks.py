@@ -71,10 +71,7 @@ def create_tran():
     global debTyp
     global credTyp
     global typ
-    try:
-        tran_accts
-    except NameError: #If the variable doesn't already exist, define it
-        tran_accts = []
+    tran_accts = []
     if request.method == "POST":
         db = get_db()
         cursor = db.cursor()
