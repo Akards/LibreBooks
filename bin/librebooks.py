@@ -627,7 +627,10 @@ def view_journal():
         cursor2.execute("SELECT ledger.amount, ledger.c_or_d, account.name FROM ledger INNER JOIN account ON account.id = ledger.acc_id WHERE trans_id=%s", [tran[0]])
         bodString = bodString + '<tr bgcolor="#ddd"><td>' + str(tran[3]) + '</td><td>' + str(tran[1]) + '</td><td>' + str(tran[2]) + '</td></tr>'
         for entry in cursor2:
-            bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
+            if entry[1] == "D":
+                bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
+            else:
+                bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0]*-1)
     bodString = bodString + '</table>'
     return render_template("view_journal.html", bod = bodString)
 
@@ -666,9 +669,9 @@ def create_sale():
             cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, acc])
 
             cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
-                           [trans, inv, amount, 'C'])
+                           [trans, inv, amount, 'D'])
             cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",
-                           [trans, acc, amount, 'D'])
+                           [trans, acc, amount, 'C'])
             db.commit()
         else: #Selling Inventory
             cursor.execute("UPDATE account SET balance=balance-%s WHERE id = %s;", [amount, inv])
@@ -676,8 +679,8 @@ def create_sale():
 
             cursor.execute("UPDATE account SET balance=balance+%s WHERE id = %s;", [amount, acc])
 
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, inv, amount, 'D'])
-            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, acc, amount, 'C'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, inv, amount, 'C'])
+            cursor.execute("INSERT INTO ledger(trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s);",[trans, acc, amount, 'D'])
             db.commit()
         return redirect(url_for("portal"))
 
