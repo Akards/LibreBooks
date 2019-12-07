@@ -64,46 +64,126 @@ class invoice_entry(object):
 def homepage():
     return render_template("home.html")
 
-#this is terrible terrible form but I don't see why it wouldnt work. It's not threadsafe but neither is flask so who really cares
 tran_accts = []
-@app.route("/create_tran")
+@app.route("/create_tran", methods=['get', 'post'])
 def create_tran():
     if 'logged on' not in session:
         return redirect(url_for('homepage'))
+    global debTyp
+    global credTyp
     global tran_accts
+    print("here")
+    if request.method == "POST":
+        db = get_db()
+        cursor = db.cursor()
+        acctNameToCheckedString = dict()
+        acctNameToEnteredString = dict()
+        for entry in dict(request.form).keys():
+            if entry[0] == 'C' and dict(request.form)[entry] != "":
+                acctNameToCheckedString[entry[4:]] = dict(request.form)[entry]
+        for entry in acctNameToCheckedString.keys():
+            try:
+                float(dict(request.form)["VAL-" + entry])
+            except:
+                return render_template("Error_Template.html", Bod="Illegal value entry for one or more accounts.")
+            acctNameToEnteredString[entry] = dict(request.form)["VAL-" + entry]
+        if len(acctNameToCheckedString.keys()) == 0:
+            return render_template("Error_Template.html", Bod="Add at least one account.")
+        for entry in acctNameToCheckedString.keys():
+            cursor.execute("SELECT name FROM account WHERE id=%s", [entry])
+            tran_accts.append((acctNameToCheckedString[entry] == 'D', cursor.fetchone()[0], acctNameToEnteredString[entry], entry))
+    else:
+        tran_accts = []
+        try:  
+            debTyp = request.args['deb']
+            credTyp = request.args['cred']
+        except:
+            return render_template("Error_Template.html", Bod="You must select an account type for both credit and debit accounts.")
     rows = ""
     total = ""
     buttonOrError = ""
     sum = 0.0
     for i in range(0, len(tran_accts)):
-        if tran_accts[i][0] == True: #debit
+        if tran_accts[i][0] == True: #credit
             rows = rows + "<tr><td>" + tran_accts[i][1] + "</td><td>" + str(tran_accts[i][2]) + "</td><td></td></tr>"
-            sum = sum + tran_accts[i][2]
+            sum = sum + float(tran_accts[i][2])
         else:
             rows = rows + "<tr><td>" + tran_accts[i][1] + "</td><td></td><td>(" + str(tran_accts[i][2]) + ")</td></tr>"
-            sum = sum - tran_accts[i][2]
+            sum = sum - float(tran_accts[i][2])
     if sum != 0:
         total = '<p style="color:red";>Total: <b>' + str(sum) + '</b></p>'
         buttonOrError = '<p style="color:red";>Cannot post with non-zero balance</p>'
     else:
         total = "<p>Total: 0</p>"
         buttonOrError = '<form method="get" action="portal"><button type="submit">post</button></form>'
-        #buttonOrError = '<button type="button" >Post</button> <br/>'
-    return render_template("Create_Tran.html", Rows = rows, Total = total, ButtonOrError = buttonOrError)
+    return render_template("Create_Tran.html", Rows = rows, Total = total, ButtonOrError = buttonOrError, Accts=str(tran_accts))
 
-notVisited = True #I couldn't get get requests to work, im just gonna do this abomination and figure it out later
+debTyp = ""
+credTyp = ""
 @app.route("/select_acct", methods=['get', 'post'])
 def select_acct():
     if 'logged on' not in session:
         return redirect(url_for('homepage'))
-    global notVisited
+    addStr = ""
+    db = get_db()
+    cursor = db.cursor()
+    if request.method == "POST":
+        db = get_db()
+        cursor = db.cursor()
+        index = 0
+        if "cred-submit" in request.form:
+            cursor.execute("SELECT name, type, acc_id FROM account join (owns natural join can_access) on acc_id=account.id "
+                           "WHERE type=%s AND user_id=%s", [credTyp, session['user'][0]])
+        else:
+            cursor.execute("SELECT name, type, acc_id FROM account join (owns natural join can_access) on acc_id=account.id "
+                           "WHERE type=%s AND  user_id=%s", [debTyp, session['user'][0]])
+        for acct in cursor:
+            if index > 5:
+                break
+            index = index + 1
+            if "cred-submit" in request.form:
+                addStr = addStr + '<tr><td>' + acct[1] + '</td><td>' + acct[0] + '</td><td>' + '<input type=checkbox name=CHK-' + str(acct[2]) + ' value=C ></td><td><input type=text name=VAL-' + str(acct[2]) + '></td></tr>'
+            else:
+                addStr = addStr + '<tr><td>' + acct[1] + '</td><td>' + acct[0] + '</td><td>' + '<input type=checkbox name=CHK-' + str(acct[2]) + ' value=D ></td><td><input type=text name=VAL-' + str(acct[2]) + '></td></tr>'
+        return render_template("select_acct.html", Rows = addStr)
+
+@app.route("/commit_add_transaction", methods=['get', 'post'])
+def commit_add_transaction():
+    if 'logged on' not in session:
+        return redirect(url_for('homepage'))
     global tran_accts
-    if notVisited == True:
-        notVisited = False
-        tran_accts = [(True, "Cash", 15), (False, "MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER", 20)]
-    else:
-        tran_accts = [(True, "Cash", 15), (False, "MARIE CALLENDERS PASTA AL DENTE RIGATONI MARINARA CLASSICO FRESH STEAMER", 15)]
-    return render_template("select_acct.html")
+    #at this point we can assume Σ(Debits) == Σ(Credits). 
+    countcheck = dict()
+    for entry in tran_accts: #making sure no accounts are duplicated
+        try:
+            a = countcheck[entry[3]]
+        except:
+            countcheck[entry[3]] = 1
+        else:
+            return render_template("commit_add_transaction.html", Bod="Transaction may not have any repeating accounts.", link="create_tran_get_type", buttonMessage="Start Over")
+    if request.form["tran_name"] == "":
+        return render_template("commit_add_transaction.html", Bod="Transaction must have a title.", link="create_tran", buttonMessage="Back")
+    elif len(tran_accts) == 0:
+        return render_template("commit_add_transaction.html", Bod="Transaction must have at least two associated accounts.", link="create_tran", buttonMessage="Back")
+    db = get_db()
+    cursor = db.cursor()
+    amt = 0.0
+    for entry in tran_accts:
+        if (entry[0]) == True:
+            amt = amt + float(entry[2])
+    cursor.execute("INSERT INTO transact(amount, name) VALUES (%s, %s) RETURNING id;", [amt, request.form["tran_name"]])
+    db.commit()
+    t_id = cursor.fetchone()[0]
+    cord = ''
+    if entry[0] == True:
+        cord = 'D'
+    elif entry[0] == False:
+        cord = 'C'
+    for entry in tran_accts:
+        cursor.execute("INSERT INTO ledger (trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)", [str(t_id), str(entry[3]), str(entry[2]), str(cord)])
+    db.commit()
+    tran_accts = []
+    return (render_template("commit_add_transaction.html", Bod="Transaction added successfully!", link="portal", buttonMessage="Home"))
 
 @app.route("/create_accountant", methods=['get', 'post'])
 def create_accountant():
@@ -552,7 +632,7 @@ def view_journal():
     bodString = bodString + '</table>'
     return render_template("view_journal.html", bod = bodString)
 
-@app.route("/create_tran_get_type", methods = ['POST', 'GET'])
+@app.route("/create_tran_get_type", methods = ['post', 'get'])
 def create_tran_get_type():
     if 'logged on' not in session:
         return redirect(url_for('homepage'))

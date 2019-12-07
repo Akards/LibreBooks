@@ -5,23 +5,24 @@
 	</head>
 	<body>
 
+	<form action="{{ url_for('create_tran') }}" method="get">
 	<p>Credit Account(s) Type:</p>
- 	<input type="radio" name="cred" value="ass"> Asset<br>
- 	<input type="radio" name="cred" value="lia"> Liability<br>
- 	<input type="radio" name="cred" value="equ"> Equity<br>
- 	<input type="radio" name="cred" value="inc"> Income<br> 
- 	<input type="radio" name="cred" value="exp"> Expense<br>   
+ 	<input type="radio" name="cred" value="ASSET"> Asset<br>
+ 	<input type="radio" name="cred" value="LIABILITY"> Liability<br>
+ 	<input type="radio" name="cred" value="EQUITY"> Equity<br>
+ 	<input type="radio" name="cred" value="INCOME"> Income<br> 
+ 	<input type="radio" name="cred" value="EXPENSE"> Expense<br>   
 
 	<p>Debit Account(s) Type:</p>
- 	<input type="radio" name="deb" value="ass"> Asset<br>
- 	<input type="radio" name="deb" value="lia"> Liability<br>
- 	<input type="radio" name="deb" value="equ"> Equity<br>
- 	<input type="radio" name="deb" value="inc"> Income<br> 
- 	<input type="radio" name="deb" value="exp"> Expense<br>  
+ 	<input type="radio" name="deb" value="ASSET"> Asset<br>
+ 	<input type="radio" name="deb" value="LIABILITY"> Liability<br>
+ 	<input type="radio" name="deb" value="EQUITY"> Equity<br>
+ 	<input type="radio" name="deb" value="INCOME"> Income<br> 
+ 	<input type="radio" name="deb" value="EXPENSE"> Expense<br>  
 
  	<br/>
-	<center><form action="{{ url_for('create_tran') }}">
-		<input type="submit" value="Create Tran"></center></form>
+	<center><input type="submit" value="Create Tran"></center>
+	</form>
 
 	</body>
 </html>

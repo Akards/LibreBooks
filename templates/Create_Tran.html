@@ -14,8 +14,8 @@
 <table style="width:500px;border: 1px solid black">
   <tr>
     <th>Name</th>
-    <th>Amt+</th> 
-    <th>Amt-</th>
+    <th>Debits</th> 
+    <th>Credits</th>
   </tr>
   	 <!-- As many rows as the category (Credit or Debit) with the most entries. In
   	each row, four columns - Credit account name, Amount Credited, Debit Account name, 
@@ -32,8 +32,12 @@
 </table>
 {{Total | safe}} <!-- This is the sum of all debits minus the sum of all credits. Will be
 red if not equal to 0 -->
-<form method="get" action="select_acct"><button type="submit">Add Debit Account</button></form>
-<button type="button" >Add Credit Account</button> <br/>
-{{ButtonOrError | safe }}
+<form method="POST" action="select_acct">
+  <input type="submit" name=cred-submit value="Add Credit Account"></button>
+  <input type="submit" name=deb-submit value="Add Debit Account" ></button>
+</form>
+<form method="POST" action="commit_add_transaction">
+  <input type="text" name="tran_name">
+  {{ButtonOrError | safe }}
 </body>
 </html>
