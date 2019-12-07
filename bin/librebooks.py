@@ -175,11 +175,11 @@ def commit_add_transaction():
     db.commit()
     t_id = cursor.fetchone()[0]
     cord = ''
-    if entry[0] == True:
-        cord = 'D'
-    elif entry[0] == False:
-        cord = 'C'
     for entry in tran_accts:
+        if entry[0] == True:
+            cord = 'D'
+        elif entry[0] == False:
+            cord = 'C'
         cursor.execute("INSERT INTO ledger (trans_id, acc_id, amount, c_or_d) VALUES (%s, %s, %s, %s)", [str(t_id), str(entry[3]), str(entry[2]), str(cord)])
     db.commit()
     tran_accts = []
