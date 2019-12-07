@@ -1,4 +1,5 @@
-# LibreBooks
+LibreBooks
+
 By Andrew F., Adam S., Ben Y., and Hugh W.
 
 Suggested Accountant Login Credentials: 
@@ -25,5 +26,3 @@ unbalanced if we made accountants have limited access.
 database.
 - Viewing accounts is its own page, rather than being shown on the 
 'portal' webpage.
-
-
