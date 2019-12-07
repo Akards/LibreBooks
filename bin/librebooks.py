@@ -64,20 +64,20 @@ class invoice_entry(object):
 def homepage():
     return render_template("home.html")
 
+tran_accts = []
 @app.route("/create_tran", methods=['get', 'post'])
 def create_tran():
     if 'logged on' not in session:
         return redirect(url_for('homepage'))
     global debTyp
     global credTyp
-    global typ
-    tran_accts = []
+    global tran_accts
+    print("here")
     if request.method == "POST":
         db = get_db()
         cursor = db.cursor()
         acctNameToCheckedString = dict()
         acctNameToEnteredString = dict()
-        AllCredits = False
         for entry in dict(request.form).keys():
             if entry[0] == 'C' and dict(request.form)[entry] != "":
                 acctNameToCheckedString[entry[4:]] = dict(request.form)[entry]
@@ -89,14 +89,11 @@ def create_tran():
             acctNameToEnteredString[entry] = dict(request.form)["VAL-" + entry]
         if len(acctNameToCheckedString.keys()) == 0:
             return render_template("Error_Template.html", Bod="Add at least one account.")
-        if acctNameToCheckedString[list(acctNameToCheckedString)[0]] == 'C':
-            AllCredits = True
-        else:
-            AllCredits = False
         for entry in acctNameToCheckedString.keys():
             cursor.execute("SELECT name FROM account WHERE id=%s", [entry])
-            tran_accts.append((AllCredits, cursor.fetchone()[0], acctNameToEnteredString[entry]))
+            tran_accts.append((acctNameToCheckedString[entry] == 'D', cursor.fetchone()[0], acctNameToEnteredString[entry]))
     else:
+        tran_accts = []
         debTyp = request.args['deb']
         credTyp = request.args['cred']
     rows = ""
@@ -116,7 +113,7 @@ def create_tran():
     else:
         total = "<p>Total: 0</p>"
         buttonOrError = '<form method="get" action="portal"><button type="submit">post</button></form>'
-    return render_template("Create_Tran.html", Rows = rows, Total = total, ButtonOrError = buttonOrError)
+    return render_template("Create_Tran.html", Rows = rows, Total = total, ButtonOrError = buttonOrError, Accts=str(tran_accts))
 
 debTyp = ""
 credTyp = ""
@@ -145,7 +142,16 @@ def select_acct():
                 addStr = addStr + '<tr><td>' + acct[1] + '</td><td>' + acct[0] + '</td><td>' + '<input type=checkbox name=CHK-' + str(acct[2]) + ' value=D ></td><td><input type=text name=VAL-' + str(acct[2]) + '></td></tr>'
         return render_template("select_acct.html", Rows = addStr)
 
-
+@app.route("/commit_add_transaction", methods=['get', 'post'])
+def commit_add_transaction():
+    global tran_accts
+    #at this point we can assume Σ(Debits) == Σ(Credits). 
+    if request.form["tran_name"] == "":
+        return render_template("commit_add_transaction.html", Bod="Transaction must have a title.", link="create_tran", buttonMessage="Back")
+    else if len(tran_accts) == 0:
+        return render_template("commit_add_transaction.html", Bod="Transaction must have at least two associated accounts.", link="create_tran", buttonMessage="Back")
+    db = get_db()
+    db.execute("INSERT INTO transactions ")
 @app.route("/manage_invoices", methods=['get', 'post'])
 def manage_invoices():
     if 'logged on' not in session:
