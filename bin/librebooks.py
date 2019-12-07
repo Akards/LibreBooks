@@ -627,8 +627,7 @@ def view_journal():
         cursor2.execute("SELECT ledger.amount, ledger.c_or_d, account.name FROM ledger INNER JOIN account ON account.id = ledger.acc_id WHERE trans_id=%s", [tran[0]])
         bodString = bodString + '<tr bgcolor="#ddd"><td>' + str(tran[3]) + '</td><td>' + str(tran[1]) + '</td><td>' + str(tran[2]) + '</td></tr>'
         for entry in cursor2:
-            if entry[1] == "D":
-                bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
+            bodString = bodString + '<tr><td>' + str(entry[2]) + '</td><td>' + str(entry[0])
     bodString = bodString + '</table>'
     return render_template("view_journal.html", bod = bodString)
 
